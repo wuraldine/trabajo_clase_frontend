@@ -1,65 +1,54 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import styles from '../styles/Cart.module.css';
-import { loadProducts } from '../utils/productsStorage';
 
-const SHIPPING_COST = 12;
+const SHIPPING_COST = 35000;
+const FREE_SHIPPING_THRESHOLD = 500000;
+const IVA_RATE = 0.19;
 
 function formatPrice(value) {
   return `$${Number(value || 0).toFixed(2)}`;
 }
 
-function Cart() {
-  const [items, setItems] = useState(() =>
-    loadProducts()
-      .slice(0, 3)
-      .map((product) => ({
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        image: product.image,
-        price: Number(product.price) || 0,
-        quantity: 1,
-      }))
-  );
-
-  const subtotal = useMemo(
+function Cart({ items = [], onUpdateQuantity, onClearCart }) {
+  const subtotalWithIva = useMemo(
     () => items.reduce((total, item) => total + item.price * item.quantity, 0),
     [items]
   );
+
+  const ivaAmount = useMemo(
+    () => subtotalWithIva * (IVA_RATE / (1 + IVA_RATE)),
+    [subtotalWithIva]
+  );
+  const subtotalWithoutIva = subtotalWithIva - ivaAmount;
 
   const totalItems = useMemo(
     () => items.reduce((total, item) => total + item.quantity, 0),
     [items]
   );
 
-  const shipping = items.length > 0 ? SHIPPING_COST : 0;
-  const total = subtotal + shipping;
+  const hasFreeShipping = subtotalWithIva >= FREE_SHIPPING_THRESHOLD;
+  const shipping = items.length > 0 && !hasFreeShipping ? SHIPPING_COST : 0;
+  const total = subtotalWithIva + shipping;
 
   const updateQuantity = (id, delta) => {
-    setItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                quantity: Math.max(0, item.quantity + delta),
-              }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
+    onUpdateQuantity?.(id, delta);
   };
 
   const clearCart = () => {
-    setItems([]);
+    onClearCart?.();
   };
 
   return (
     <section className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Carrito</h1>
+        <h1 className={styles.title}>Carrito de compras</h1>
         <p className={styles.subtitle}>Revisa tu pedido antes de confirmar la compra</p>
+
+        <div className={styles.headerStats}>
+          <span className={styles.statPill}>{totalItems} articulos</span>
+          <span className={styles.statPill}>Total estimado {formatPrice(total)}</span>
+        </div>
       </header>
 
       <div className={styles.layout}>
@@ -105,6 +94,9 @@ function Cart() {
 
         <aside className={styles.summaryBlock}>
           <h3 className={styles.summaryTitle}>Resumen</h3>
+          <p className={styles.summaryCaption}>
+            Envio gratis en compras desde {formatPrice(FREE_SHIPPING_THRESHOLD)}.
+          </p>
 
           <div className={styles.summaryRow}>
             <span>Productos</span>
@@ -112,13 +104,23 @@ function Cart() {
           </div>
 
           <div className={styles.summaryRow}>
-            <span>Subtotal</span>
-            <span>{formatPrice(subtotal)}</span>
+            <span>Subtotal (sin IVA)</span>
+            <span>{formatPrice(subtotalWithoutIva)}</span>
+          </div>
+
+          <div className={styles.summaryRow}>
+            <span>IVA incluido (19%)</span>
+            <span>{formatPrice(ivaAmount)}</span>
+          </div>
+
+          <div className={styles.summaryRow}>
+            <span>Subtotal (con IVA)</span>
+            <span>{formatPrice(subtotalWithIva)}</span>
           </div>
 
           <div className={styles.summaryRow}>
             <span>Envio</span>
-            <span>{formatPrice(shipping)}</span>
+            <span>{shipping === 0 && items.length > 0 ? 'Gratis' : formatPrice(shipping)}</span>
           </div>
 
           <div className={`${styles.summaryRow} ${styles.summaryTotal}`}>

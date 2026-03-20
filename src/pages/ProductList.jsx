@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import ProductCard from '../components/ProductCard';
 import ProductForm from '../components/ProductForm';
@@ -7,10 +7,12 @@ import { loadProducts, PRODUCTS_STORAGE_KEY } from '../utils/productsStorage';
 
 const STORAGE_KEY = PRODUCTS_STORAGE_KEY;
 
-function ProductList() {
+function ProductList({ onAddToCart }) {
   const [productsState, setProductsState] = useState(loadProducts);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [showAddToast, setShowAddToast] = useState(false);
+  const toastTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -23,6 +25,14 @@ function ProductList() {
       void error;
     }
   }, [productsState]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        window.clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleOpenCreate = () => {
     setEditingProduct(null);
@@ -100,6 +110,19 @@ function ProductList() {
     });
   };
 
+  const handleAddToCart = (product) => {
+    onAddToCart?.(product);
+    setShowAddToast(true);
+
+    if (toastTimeoutRef.current) {
+      window.clearTimeout(toastTimeoutRef.current);
+    }
+
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setShowAddToast(false);
+    }, 2000);
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -138,11 +161,18 @@ function ProductList() {
                 likes={product.likes}
                 isLiked={product.isLiked}
                 onToggleLike={() => handleToggleLike(product.id)}
+                onAddToCart={() => handleAddToCart(product)}
                 onDelete={() => handleDeleteProduct(product.id)}
                 onEdit={() => handleEditStart(product)}
               />
             ))}
           </div>
+
+          {showAddToast ? (
+            <div className={styles.toast} role="status" aria-live="polite">
+              Producto agregado al carrito correctamente
+            </div>
+          ) : null}
         </>
       )}
     </div>

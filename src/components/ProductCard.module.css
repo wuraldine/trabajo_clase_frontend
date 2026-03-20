@@ -143,6 +143,21 @@
   background: var(--primary-dark);
 }
 
+.btnCart {
+  background: var(--success);
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btnCart:hover {
+  filter: brightness(0.95);
+}
+
 .toolbar {
   display: flex;
   justify-content: flex-end;

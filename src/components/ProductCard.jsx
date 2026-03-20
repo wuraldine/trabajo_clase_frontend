@@ -10,6 +10,7 @@ function ProductCard({
   description,
   rating,
   onDetails,
+  onAddToCart,
   onEdit,
   onDelete,
 }) {
@@ -47,11 +48,17 @@ function ProductCard({
           </button>
         </div>
 
-        {onDetails || onEdit || onDelete ? (
+        {onDetails || onAddToCart || onEdit || onDelete ? (
           <div className={styles.cardActions}>
             {onDetails ? (
               <button type="button" className={styles.btnDetails} onClick={onDetails}>
                 Más información
+              </button>
+            ) : null}
+
+            {onAddToCart ? (
+              <button type="button" className={styles.btnCart} onClick={onAddToCart}>
+                Agregar al carrito
               </button>
             ) : null}
 
