@@ -1,14 +1,11 @@
 import { useMemo } from 'react';
 
 import styles from '../styles/Cart.module.css';
+import { formatCurrency } from '../utils/priceFormat';
 
 const SHIPPING_COST = 35000;
 const FREE_SHIPPING_THRESHOLD = 500000;
 const IVA_RATE = 0.19;
-
-function formatPrice(value) {
-  return `$${Number(value || 0).toFixed(2)}`;
-}
 
 function Cart({ items = [], onUpdateQuantity, onClearCart }) {
   const subtotalWithIva = useMemo(
@@ -47,7 +44,7 @@ function Cart({ items = [], onUpdateQuantity, onClearCart }) {
 
         <div className={styles.headerStats}>
           <span className={styles.statPill}>{totalItems} articulos</span>
-          <span className={styles.statPill}>Total estimado {formatPrice(total)}</span>
+          <span className={styles.statPill}>Total estimado {formatCurrency(total)}</span>
         </div>
       </header>
 
@@ -63,7 +60,7 @@ function Cart({ items = [], onUpdateQuantity, onClearCart }) {
                 <div className={styles.itemInfo}>
                   <p className={styles.itemCategory}>{item.category}</p>
                   <h2 className={styles.itemName}>{item.name}</h2>
-                  <p className={styles.itemPrice}>{formatPrice(item.price)}</p>
+                  <p className={styles.itemPrice}>{formatCurrency(item.price)}</p>
                 </div>
 
                 <div className={styles.qtyBox}>
@@ -95,7 +92,7 @@ function Cart({ items = [], onUpdateQuantity, onClearCart }) {
         <aside className={styles.summaryBlock}>
           <h3 className={styles.summaryTitle}>Resumen</h3>
           <p className={styles.summaryCaption}>
-            Envio gratis en compras desde {formatPrice(FREE_SHIPPING_THRESHOLD)}.
+            Envio gratis en compras desde {formatCurrency(FREE_SHIPPING_THRESHOLD)}.
           </p>
 
           <div className={styles.summaryRow}>
@@ -105,27 +102,27 @@ function Cart({ items = [], onUpdateQuantity, onClearCart }) {
 
           <div className={styles.summaryRow}>
             <span>Subtotal (sin IVA)</span>
-            <span>{formatPrice(subtotalWithoutIva)}</span>
+            <span>{formatCurrency(subtotalWithoutIva)}</span>
           </div>
 
           <div className={styles.summaryRow}>
             <span>IVA incluido (19%)</span>
-            <span>{formatPrice(ivaAmount)}</span>
+            <span>{formatCurrency(ivaAmount)}</span>
           </div>
 
           <div className={styles.summaryRow}>
             <span>Subtotal (con IVA)</span>
-            <span>{formatPrice(subtotalWithIva)}</span>
+            <span>{formatCurrency(subtotalWithIva)}</span>
           </div>
 
           <div className={styles.summaryRow}>
             <span>Envio</span>
-            <span>{shipping === 0 && items.length > 0 ? 'Gratis' : formatPrice(shipping)}</span>
+            <span>{shipping === 0 && items.length > 0 ? 'Gratis' : formatCurrency(shipping)}</span>
           </div>
 
           <div className={`${styles.summaryRow} ${styles.summaryTotal}`}>
             <span>Total</span>
-            <span>{formatPrice(total)}</span>
+            <span>{formatCurrency(total)}</span>
           </div>
 
           <button type="button" className={styles.checkoutBtn} disabled={items.length === 0}>

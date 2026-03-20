@@ -1,5 +1,6 @@
 import {useState} from "react";
 import styles from "./ProductCard.module.css";
+import { formatCurrency } from '../utils/priceFormat';
 
 function ProductCard({
   name,
@@ -39,7 +40,7 @@ function ProductCard({
         <p className={styles.productDescription}>{description}</p>
         <p className={styles.productStock}>Stock: {stock}</p>
         <div className={styles.productFooter}>
-          <span className={styles.productPrice}>{price}</span>
+          <span className={styles.productPrice}>{formatCurrency(price)}</span>
           <button
             className={`${styles.btnLike} ${isLiked ? styles.liked : ''}`}
             onClick={handleLike}
