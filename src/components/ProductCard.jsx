@@ -1,5 +1,5 @@
-import {useState} from "react";
-import styles from "./ProductCard.module.css";
+import { useEffect, useState } from 'react';
+import styles from './ProductCard.module.css';
 import { formatCurrency } from '../utils/priceFormat';
 
 function ProductCard({
@@ -10,21 +10,38 @@ function ProductCard({
   image,
   description,
   rating,
+  likes,
+  isLiked,
+  onToggleLike,
   onDetails,
   onAddToCart,
   onEdit,
   onDelete,
 }) {
-  const [likes, setLikes] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
+  const [localLikes, setLocalLikes] = useState(() => Number(likes) || 0);
+  const [localIsLiked, setLocalIsLiked] = useState(() => Boolean(isLiked));
+
+  useEffect(() => {
+    if (typeof likes === 'number') {
+      setLocalLikes(likes);
+    }
+  }, [likes]);
+
+  useEffect(() => {
+    if (typeof isLiked === 'boolean') {
+      setLocalIsLiked(isLiked);
+    }
+  }, [isLiked]);
 
   const handleLike = () => {
-    if (isLiked) {
-      setLikes(likes - 1);
-      setIsLiked(false);
-    } else {
-      setLikes(likes + 1);
-      setIsLiked(true);
+    const nextIsLiked = !localIsLiked;
+    const nextLikes = nextIsLiked ? localLikes + 1 : Math.max(0, localLikes - 1);
+
+    setLocalIsLiked(nextIsLiked);
+    setLocalLikes(nextLikes);
+
+    if (onToggleLike) {
+      onToggleLike();
     }
   };
 
@@ -42,10 +59,11 @@ function ProductCard({
         <div className={styles.productFooter}>
           <span className={styles.productPrice}>{formatCurrency(price)}</span>
           <button
-            className={`${styles.btnLike} ${isLiked ? styles.liked : ''}`}
+            type="button"
+            className={`${styles.btnLike} ${localIsLiked ? styles.liked : ''}`}
             onClick={handleLike}
           >
-            {isLiked ? '❤️' : '🤍'} {likes} Me gusta
+            {localIsLiked ? '❤️' : '🤍'} {localLikes} Me gusta
           </button>
         </div>
 

@@ -89,11 +89,27 @@
 .btnLike.liked {
   background: var(--danger-soft);
   color: var(--danger);
+  animation: likePulse 0.32s ease-out;
 }
 
 .btnLike.liked:hover {
   background: var(--danger-soft-hover);
 }
+
+@keyframes likePulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.12);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
 .productStock {
   font-size: 0.875rem;
   font-weight: 700;
