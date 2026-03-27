@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import Footer from './components/Footer';
 import Header from './components/Header';
@@ -6,6 +6,7 @@ import Cart from './pages/Cart';
 import CategoryProducts from './pages/CategoryProducts';
 import Home from './pages/Home';
 import ProductList from './pages/ProductList';
+import { CART_STORAGE_KEY, loadCartItems } from './utils/cartStorage';
 
 import './App.css';
 
@@ -13,7 +14,11 @@ function App() {
   const [activePage, setActivePage] = useState('home');
   const [user, setUser] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState(loadCartItems);
+
+  useEffect(() => {
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const handleNavigate = (page) => {
     setActivePage(page);
@@ -34,66 +39,98 @@ function App() {
   };
 
   const handleAddToCart = (product) => {
-    if (!product?.id) return;
+    if (!product || !Number.isFinite(Number(product.id))) {
+      return;
+    }
 
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
+    setCartItems((currentItems) => {
+      const existingItem = currentItems.find((item) => item.id === product.id);
+      const stock =
+        Number.isFinite(Number(product.stock)) && Number(product.stock) > 0
+          ? Number(product.stock)
+          : 1;
 
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? {
-                ...item,
-                quantity: item.quantity + 1,
-              }
-            : item
-        );
+      if (!existingItem) {
+        return [
+          ...currentItems,
+          {
+            id: Number(product.id),
+            name: product.name,
+            category: product.category,
+            price: Number(product.price) || 0,
+            stock,
+            image: product.image,
+            quantity: 1,
+          },
+        ];
       }
 
-      return [
-        ...prev,
-        {
-          id: product.id,
-          name: product.name,
-          category: product.category,
-          image: product.image,
-          price: Number(product.price) || 0,
-          quantity: 1,
-        },
-      ];
+      return currentItems.map((item) => {
+        if (item.id !== product.id) {
+          return item;
+        }
+
+        return {
+          ...item,
+          stock,
+          quantity: Math.min(item.quantity + 1, stock),
+        };
+      });
     });
   };
 
-  const handleUpdateCartItemQuantity = (id, delta) => {
-    setCartItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                quantity: Math.max(0, item.quantity + delta),
-              }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
+  const handleUpdateCartItemQuantity = (productId, nextQuantity) => {
+    setCartItems((currentItems) =>
+      currentItems.flatMap((item) => {
+        if (item.id !== productId) {
+          return [item];
+        }
+
+        const stock =
+          Number.isFinite(Number(item.stock)) && Number(item.stock) > 0 ? Number(item.stock) : 1;
+        const normalizedQuantity = Math.max(
+          1,
+          Math.min(stock, Math.floor(Number(nextQuantity) || 1))
+        );
+
+        return normalizedQuantity > 0 ? [{ ...item, quantity: normalizedQuantity }] : [];
+      })
     );
+  };
+
+  const handleRemoveCartItem = (productId) => {
+    setCartItems((currentItems) => currentItems.filter((item) => item.id !== productId));
   };
 
   const handleClearCart = () => {
     setCartItems([]);
   };
 
+  const cartItemCount = useMemo(
+    () => cartItems.reduce((total, item) => total + item.quantity, 0),
+    [cartItems]
+  );
+
   const page = useMemo(() => {
     if (activePage === 'category') {
-      return <CategoryProducts category={selectedCategory} onBack={handleBackFromCategory} />;
+      return (
+        <CategoryProducts
+          category={selectedCategory}
+          onBack={handleBackFromCategory}
+          cartItems={cartItems}
+          onAddToCart={handleAddToCart}
+        />
+      );
     }
-    if (activePage === 'products') return <ProductList onAddToCart={handleAddToCart} />;
+    if (activePage === 'products') return <ProductList />;
     if (activePage === 'cart') {
       return (
         <Cart
-          items={cartItems}
+          cartItems={cartItems}
           onUpdateQuantity={handleUpdateCartItemQuantity}
+          onRemoveItem={handleRemoveCartItem}
           onClearCart={handleClearCart}
+          onContinueShopping={() => setActivePage('home')}
         />
       );
     }
@@ -117,6 +154,7 @@ function App() {
         user={user}
         onSignIn={handleSignIn}
         onSignOut={handleSignOut}
+        cartItemCount={cartItemCount}
       />
 
       <main className="main">{page}</main>
