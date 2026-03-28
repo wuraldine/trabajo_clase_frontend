@@ -122,7 +122,9 @@ function App() {
         />
       );
     }
-    if (activePage === 'products') return <ProductList />;
+    if (activePage === 'products') {
+      return <ProductList onAddToCart={handleAddToCart} />;
+    }
     if (activePage === 'cart') {
       return (
         <Cart
