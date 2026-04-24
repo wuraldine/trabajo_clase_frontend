@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+
 import styles from './ProductCard.module.css';
 import { formatCurrency } from '../utils/priceFormat';
 
 function ProductCard({
+  id,
   name,
   category,
   price,
@@ -10,38 +12,22 @@ function ProductCard({
   image,
   description,
   rating,
-  likes,
-  isLiked,
-  onToggleLike,
-  onDetails,
   onAddToCart,
+  onDetails,
   onEdit,
   onDelete,
+  disableAddToCart = false,
 }) {
-  const [localLikes, setLocalLikes] = useState(() => Number(likes) || 0);
-  const [localIsLiked, setLocalIsLiked] = useState(() => Boolean(isLiked));
-
-  useEffect(() => {
-    if (typeof likes === 'number') {
-      setLocalLikes(likes);
-    }
-  }, [likes]);
-
-  useEffect(() => {
-    if (typeof isLiked === 'boolean') {
-      setLocalIsLiked(isLiked);
-    }
-  }, [isLiked]);
+  const [likes, setLikes] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
 
   const handleLike = () => {
-    const nextIsLiked = !localIsLiked;
-    const nextLikes = nextIsLiked ? localLikes + 1 : Math.max(0, localLikes - 1);
-
-    setLocalIsLiked(nextIsLiked);
-    setLocalLikes(nextLikes);
-
-    if (onToggleLike) {
-      onToggleLike();
+    if (isLiked) {
+      setLikes(likes - 1);
+      setIsLiked(false);
+    } else {
+      setLikes(likes + 1);
+      setIsLiked(true);
     }
   };
 
@@ -59,25 +45,29 @@ function ProductCard({
         <div className={styles.productFooter}>
           <span className={styles.productPrice}>{formatCurrency(price)}</span>
           <button
-            type="button"
-            className={`${styles.btnLike} ${localIsLiked ? styles.liked : ''}`}
+            className={`${styles.btnLike} ${isLiked ? styles.liked : ''}`}
             onClick={handleLike}
           >
-            {localIsLiked ? '❤️' : '🤍'} {localLikes} Me gusta
+            {isLiked ? '❤️' : '🤍'} {likes} Me gusta
           </button>
         </div>
 
-        {onDetails || onAddToCart || onEdit || onDelete ? (
+        {onAddToCart || onDetails || onEdit || onDelete ? (
           <div className={styles.cardActions}>
-            {onDetails ? (
-              <button type="button" className={styles.btnDetails} onClick={onDetails}>
-                Más información
+            {onAddToCart ? (
+              <button
+                type="button"
+                className={styles.btnAddToCart}
+                onClick={() => onAddToCart({ id, name, category, price, stock, image })}
+                disabled={disableAddToCart}
+              >
+                {disableAddToCart ? 'Stock agotado en carrito' : 'Agregar al carrito'}
               </button>
             ) : null}
 
-            {onAddToCart ? (
-              <button type="button" className={styles.btnCart} onClick={onAddToCart}>
-                Agregar al carrito
+            {onDetails ? (
+              <button type="button" className={styles.btnDetails} onClick={onDetails}>
+                Más información
               </button>
             ) : null}
 
