@@ -1,135 +1,129 @@
-import { useMemo } from 'react';
-
 import styles from '../styles/Cart.module.css';
 import { formatCurrency } from '../utils/priceFormat';
 
-const SHIPPING_COST = 35000;
-const FREE_SHIPPING_THRESHOLD = 500000;
-const IVA_RATE = 0.19;
+function Cart({ cartItems, onUpdateQuantity, onRemoveItem, onClearCart, onContinueShopping }) {
+  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
-function Cart({ items = [], onUpdateQuantity, onClearCart }) {
-  const subtotalWithIva = useMemo(
-    () => items.reduce((total, item) => total + item.price * item.quantity, 0),
-    [items]
-  );
+  if (cartItems.length === 0) {
+    return (
+      <section className={styles.container}>
+        <div className={styles.header}>
+          <div>
+            <h1 className={styles.title}>Carrito</h1>
+            <p className={styles.subtitle}>Todavía no tienes productos agregados.</p>
+          </div>
 
-  const ivaAmount = useMemo(
-    () => subtotalWithIva * (IVA_RATE / (1 + IVA_RATE)),
-    [subtotalWithIva]
-  );
-  const subtotalWithoutIva = subtotalWithIva - ivaAmount;
+          <button type="button" className={styles.btnContinue} onClick={onContinueShopping}>
+            Seguir comprando
+          </button>
+        </div>
 
-  const totalItems = useMemo(
-    () => items.reduce((total, item) => total + item.quantity, 0),
-    [items]
-  );
-
-  const hasFreeShipping = subtotalWithIva >= FREE_SHIPPING_THRESHOLD;
-  const shipping = items.length > 0 && !hasFreeShipping ? SHIPPING_COST : 0;
-  const total = subtotalWithIva + shipping;
-
-  const updateQuantity = (id, delta) => {
-    onUpdateQuantity?.(id, delta);
-  };
-
-  const clearCart = () => {
-    onClearCart?.();
-  };
+        <div className={styles.empty}>
+          <h2 className={styles.emptyTitle}>Tu carrito está vacío</h2>
+          <p className={styles.emptyText}>
+            Vuelve al catálogo, entra a una categoría y agrega productos para continuar.
+          </p>
+          <button type="button" className={styles.btnContinue} onClick={onContinueShopping}>
+            Ir al inicio
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Carrito de compras</h1>
-        <p className={styles.subtitle}>Revisa tu pedido antes de confirmar la compra</p>
-
-        <div className={styles.headerStats}>
-          <span className={styles.statPill}>{totalItems} articulos</span>
-          <span className={styles.statPill}>Total estimado {formatCurrency(total)}</span>
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.title}>Carrito</h1>
+          <p className={styles.subtitle}>
+            Gestiona cantidades, revisa subtotales y prepara el checkout.
+          </p>
         </div>
-      </header>
+
+        <button type="button" className={styles.btnContinue} onClick={onContinueShopping}>
+          Seguir comprando
+        </button>
+      </div>
 
       <div className={styles.layout}>
-        <div className={styles.listBlock}>
-          {items.length === 0 ? (
-            <p className={styles.empty}>Tu carrito esta vacio. Agrega productos desde la vista Productos.</p>
-          ) : (
-            items.map((item) => (
-              <article key={item.id} className={styles.itemCard}>
-                <img className={styles.itemImage} src={item.image} alt={item.name} />
+        <div className={styles.items}>
+          <div className={styles.itemList}>
+            {cartItems.map((item) => {
+              const itemSubtotal = item.price * item.quantity;
 
-                <div className={styles.itemInfo}>
-                  <p className={styles.itemCategory}>{item.category}</p>
-                  <h2 className={styles.itemName}>{item.name}</h2>
-                  <p className={styles.itemPrice}>{formatCurrency(item.price)}</p>
-                </div>
+              return (
+                <article key={item.id} className={styles.item}>
+                  <img className={styles.image} src={item.image} alt={item.name} />
 
-                <div className={styles.qtyBox}>
-                  <button
-                    type="button"
-                    className={styles.qtyBtn}
-                    onClick={() => updateQuantity(item.id, -1)}
-                    aria-label={`Quitar una unidad de ${item.name}`}
-                  >
-                    -
-                  </button>
+                  <div className={styles.itemInfo}>
+                    <span className={styles.category}>{item.category}</span>
+                    <h2 className={styles.name}>{item.name}</h2>
+                    <p className={styles.price}>Precio unitario: {formatCurrency(item.price)}</p>
+                    <p className={styles.stock}>Stock disponible: {item.stock}</p>
+                    <p className={styles.subtotal}>
+                      <span className={styles.subtotalLabel}>Subtotal:</span>{' '}
+                      {formatCurrency(itemSubtotal)}
+                    </p>
+                  </div>
 
-                  <span className={styles.qtyValue}>{item.quantity}</span>
+                  <div className={styles.actions}>
+                    <div className={styles.quantityBox}>
+                      <button
+                        type="button"
+                        className={styles.btnQuantity}
+                        onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
+                      >
+                        -
+                      </button>
+                      <span className={styles.quantityValue}>{item.quantity}</span>
+                      <button
+                        type="button"
+                        className={styles.btnQuantity}
+                        onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                        disabled={item.quantity >= item.stock}
+                      >
+                        +
+                      </button>
+                    </div>
 
-                  <button
-                    type="button"
-                    className={styles.qtyBtn}
-                    onClick={() => updateQuantity(item.id, 1)}
-                    aria-label={`Agregar una unidad de ${item.name}`}
-                  >
-                    +
-                  </button>
-                </div>
-              </article>
-            ))
-          )}
+                    <button
+                      type="button"
+                      className={styles.btnRemove}
+                      onClick={() => onRemoveItem(item.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
 
-        <aside className={styles.summaryBlock}>
-          <h3 className={styles.summaryTitle}>Resumen</h3>
-          <p className={styles.summaryCaption}>
-            Envio gratis en compras desde {formatCurrency(FREE_SHIPPING_THRESHOLD)}.
-          </p>
+        <aside className={styles.summary}>
+          <h2 className={styles.summaryTitle}>Resumen</h2>
 
-          <div className={styles.summaryRow}>
-            <span>Productos</span>
-            <span>{totalItems}</span>
+          <div className={styles.summaryRows}>
+            <div className={styles.summaryRow}>
+              <span>Productos</span>
+              <span className={styles.summaryValue}>{cartItems.length}</span>
+            </div>
+
+            <div className={styles.summaryRow}>
+              <span>Unidades</span>
+              <span className={styles.summaryValue}>{totalItems}</span>
+            </div>
+
+            <div className={`${styles.summaryRow} ${styles.summaryTotal}`}>
+              <span>Total</span>
+              <span className={styles.summaryValue}>{formatCurrency(subtotal)}</span>
+            </div>
           </div>
 
-          <div className={styles.summaryRow}>
-            <span>Subtotal (sin IVA)</span>
-            <span>{formatCurrency(subtotalWithoutIva)}</span>
-          </div>
-
-          <div className={styles.summaryRow}>
-            <span>IVA incluido (19%)</span>
-            <span>{formatCurrency(ivaAmount)}</span>
-          </div>
-
-          <div className={styles.summaryRow}>
-            <span>Subtotal (con IVA)</span>
-            <span>{formatCurrency(subtotalWithIva)}</span>
-          </div>
-
-          <div className={styles.summaryRow}>
-            <span>Envio</span>
-            <span>{shipping === 0 && items.length > 0 ? 'Gratis' : formatCurrency(shipping)}</span>
-          </div>
-
-          <div className={`${styles.summaryRow} ${styles.summaryTotal}`}>
-            <span>Total</span>
-            <span>{formatCurrency(total)}</span>
-          </div>
-
-          <button type="button" className={styles.checkoutBtn} disabled={items.length === 0}>
-            Confirmar compra
-          </button>
-
-          <button type="button" className={styles.clearBtn} onClick={clearCart} disabled={items.length === 0}>
+          <button type="button" className={styles.btnClear} onClick={onClearCart}>
             Vaciar carrito
           </button>
         </aside>
