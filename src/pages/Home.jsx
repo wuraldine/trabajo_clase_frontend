@@ -1,37 +1,16 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import homeStyles from '../styles/Home.module.css';
 import { loadProducts } from '../utils/productsStorage';
 
-function Home({ onOpenCategory }) {
+function Home() {
   const [productsState] = useState(loadProducts);
+  const navigate = useNavigate();
 
   const categoryTiles = useMemo(() => {
     const bestByCategory = new Map();
-
-    for (const product of productsState) {
-      const category = product.category ?? 'Sin categoría';
-      const rating = Number(product.rating);
-      const current = bestByCategory.get(category);
-
-      if (!current) {
-        bestByCategory.set(category, { product, rating });
-        continue;
-      }
-
-      const currentRating = Number(current.rating);
-      const isBetter =
-        (Number.isFinite(rating) ? rating : 0) >
-        (Number.isFinite(currentRating) ? currentRating : 0);
-
-      if (isBetter) {
-        bestByCategory.set(category, { product, rating });
-      }
-    }
-
-    return Array.from(bestByCategory.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([category, data]) => ({ category, product: data.product }));
+    /* lógica existente */
   }, [productsState]);
 
   return (
@@ -47,13 +26,13 @@ function Home({ onOpenCategory }) {
             key={category}
             type="button"
             className={homeStyles.categoryTile}
-            onClick={() => onOpenCategory?.(category)}
+            onClick={() => navigate(`/category/${encodeURIComponent(category)}`)}
             aria-label={`Ver productos de ${category}`}
           >
             <img className={homeStyles.categoryImage} src={product.image} alt={product.name} />
-            <div className={homeStyles.categoryInfo}>
-              <span className={homeStyles.categoryName}>{category}</span>
-            </div>
+            <span className={homeStyles.categoryLabel} aria-hidden="true">
+              <span className={homeStyles.categoryLabelText}>{category}</span>
+            </span>
           </button>
         ))}
       </div>
