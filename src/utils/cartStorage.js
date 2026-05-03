@@ -1,4 +1,8 @@
+import { products as seedProducts } from '../data/products';
+
 const STORAGE_KEY = 'cartItems';
+
+const seedById = new Map(seedProducts.map((product) => [product.id, product]));
 
 const clampQuantity = (value, maxStock) => {
   const parsed = Number(value);
@@ -13,6 +17,7 @@ const clampQuantity = (value, maxStock) => {
 };
 
 const normalizeCartItem = (item) => {
+  const seedProduct = seedById.get(item?.id);
   const stock =
     Number.isFinite(Number(item?.stock)) && Number(item.stock) > 0 ? Number(item.stock) : 1;
 
@@ -22,7 +27,7 @@ const normalizeCartItem = (item) => {
     category: String(item?.category ?? 'Sin categoría'),
     price: Number(item?.price) || 0,
     stock,
-    image: String(item?.image ?? ''),
+    image: seedProduct?.image || String(item?.image ?? ''),
     quantity: clampQuantity(item?.quantity, stock),
   };
 };
