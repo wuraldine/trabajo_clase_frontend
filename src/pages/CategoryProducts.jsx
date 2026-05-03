@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import ProductCard from '../components/ProductCard';
@@ -11,9 +11,19 @@ function CategoryProducts({ cartItems, onAddToCart }) {
   const [query, setQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAddToast, setShowAddToast] = useState(false);
   const [productsState] = useState(() => loadProducts());
+  const toastTimeoutRef = useRef(null);
   const navigate = useNavigate();
   const { categoryName } = useParams();
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        window.clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const category = useMemo(
     () => (categoryName ? decodeURIComponent(categoryName) : null),
@@ -43,6 +53,19 @@ function CategoryProducts({ cartItems, onAddToCart }) {
   const handleOpenDetails = (product) => {
     setSelectedProduct(product);
     setIsModalOpen(true);
+  };
+
+  const handleAddToCart = (product) => {
+    onAddToCart?.(product);
+    setShowAddToast(true);
+
+    if (toastTimeoutRef.current) {
+      window.clearTimeout(toastTimeoutRef.current);
+    }
+
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setShowAddToast(false);
+    }, 2000);
   };
 
   const handleCloseDetails = () => {
@@ -100,12 +123,18 @@ function CategoryProducts({ cartItems, onAddToCart }) {
                   description={product.description}
                   rating={product.rating}
                   disableAddToCart={cartQuantityByProductId.get(product.id) >= product.stock}
-                  onAddToCart={() => onAddToCart?.(product)}
+                  onAddToCart={() => handleAddToCart(product)}
                   onDetails={() => handleOpenDetails(product)}
                 />
               ))}
             </div>
           )}
+        </div>
+      ) : null}
+
+      {showAddToast ? (
+        <div className={styles.toast} role="status" aria-live="polite">
+          Producto agregado correctamente al carrito
         </div>
       ) : null}
 

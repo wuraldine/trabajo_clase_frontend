@@ -68,3 +68,38 @@
   color: rgba(255, 255, 255, 0.9);
   font-weight: 800;
 }
+
+.toast {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 120;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  background: linear-gradient(140deg, #ca007f, #ff54bf);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 10px 28px rgba(131, 8, 84, 0.35);
+  animation: toast-enter 0.25s ease-out;
+}
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .toast {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    text-align: center;
+  }
+}
