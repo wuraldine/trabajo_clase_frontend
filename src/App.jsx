@@ -132,7 +132,7 @@ function App() {
           onUpdateQuantity={handleUpdateCartItemQuantity}
           onRemoveItem={handleRemoveCartItem}
           onClearCart={handleClearCart}
-          onContinueShopping={() => setActivePage('home')}
+          onContinueShopping={() => setActivePage('products')}
         />
       );
     }

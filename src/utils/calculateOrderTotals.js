@@ -2,16 +2,10 @@ export const TAX_RATE = 0.19;
 
 export const SHIPPING_OPTIONS = [
   {
-    id: 'standard',
-    label: 'Envío estándar',
-    description: 'Entrega entre 3 y 5 días hábiles.',
-    price: 15000,
-  },
-  {
-    id: 'express',
-    label: 'Envío express',
-    description: 'Entrega prioritaria en 24 horas.',
-    price: 25000,
+    id: 'free-door',
+    label: 'Envío gratis hasta la puerta de tu casa',
+    description: 'Entrega sin costo adicional.',
+    price: 0,
   },
 ];
 
@@ -44,29 +38,38 @@ export function getPaymentMethodById(paymentMethodId) {
 export function calculateCartSubtotal(cartItems) {
   return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 }
-
 export function calculateOrderTotals(cartItems, shippingMethodId = SHIPPING_OPTIONS[0].id) {
   const subtotal = calculateCartSubtotal(cartItems);
+
+  const shippingOption = getShippingOptionById(shippingMethodId);
 
   if (subtotal === 0) {
     return {
       subtotal: 0,
+      subtotalWithoutTax: 0,
       tax: 0,
       shipping: 0,
       total: 0,
-      shippingOption: getShippingOptionById(shippingMethodId),
+      shippingOption,
     };
   }
 
-  const shippingOption = getShippingOptionById(shippingMethodId);
-  const tax = Math.round(subtotal * TAX_RATE);
+  // Prices are tax-included. Extract tax portion from the gross subtotal.
+  // tax = subtotal - (subtotal / (1 + TAX_RATE))
+  const subtotalWithoutTax = Math.round(subtotal / (1 + TAX_RATE));
+  const tax = subtotal - subtotalWithoutTax;
+
   const shipping = shippingOption.price;
+
+  // Total = subtotal (already includes tax) + shipping
+  const total = subtotal + shipping;
 
   return {
     subtotal,
+    subtotalWithoutTax,
     tax,
     shipping,
-    total: subtotal + tax + shipping,
+    total,
     shippingOption,
   };
 }
