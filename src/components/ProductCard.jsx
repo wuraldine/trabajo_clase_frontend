@@ -24,7 +24,7 @@ function ProductCard({
       setLikes(prev => Math.max(0, prev - 1));
       setIsLiked(false);
     } else {
-      setLikes(prev => prev=> prev + 1);
+      setLikes(prev => prev + 1);
       setIsLiked(true);
     }
   };
