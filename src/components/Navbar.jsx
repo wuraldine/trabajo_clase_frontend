@@ -33,10 +33,10 @@ function Navbar({ user, onSignOut, cartItemCount = 0 }) {
 
   return (
     <nav className={styles.navbar}>
-      <div className={styles.brand}>
+      <NavLink to="/" className={styles.brand}>
         <img className={styles.logo} src={logo} alt="Logo" />
-        <span className={styles.brandName}>Sistema Ventas</span>
-      </div>
+        <span className={styles.brandName}>Plataforma<br />Sistemas de Ventas</span>
+      </NavLink>
 
       <div className={styles.links}>
         <NavLink to="/" end className={() => `${styles.link} ${isHomeActive ? styles.active : ''}`}>
