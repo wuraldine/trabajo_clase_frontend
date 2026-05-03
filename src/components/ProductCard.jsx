@@ -1,7 +1,5 @@
-import { useState } from 'react';
-
-import styles from './ProductCard.module.css';
-import { formatCurrency } from '../utils/priceFormat';
+import {useState} from "react";
+import styles from "./ProductCard.module.css";
 
 function ProductCard({
   id,
@@ -12,23 +10,21 @@ function ProductCard({
   image,
   description,
   rating,
-  onAddToCart,
   onDetails,
   onEdit,
   onDelete,
+  onAddToCart,
   disableAddToCart = false,
-  likes: initialLikes = 0,
-  isLiked: initialIsLiked = false,
 }) {
-  const [likes, setLikes] = useState(Number(initialLikes) || 0);
-  const [isLiked, setIsLiked] = useState(Boolean(initialIsLiked));
+  const [likes, setLikes] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
 
   const handleLike = () => {
     if (isLiked) {
-      setLikes((n) => Math.max(0, n - 1));
+      setLikes(prev => Math.max(0, prev - 1));
       setIsLiked(false);
     } else {
-      setLikes((n) => n + 1);
+      setLikes(prev => prev + 1);
       setIsLiked(true);
     }
   };
@@ -45,8 +41,9 @@ function ProductCard({
         <p className={styles.productDescription}>{description}</p>
         <p className={styles.productStock}>Stock: {stock}</p>
         <div className={styles.productFooter}>
-          <span className={styles.productPrice}>{formatCurrency(price)}</span>
+          <span className={styles.productPrice}>{price}</span>
           <button
+            type="button"
             className={`${styles.btnLike} ${isLiked ? styles.liked : ''}`}
             onClick={handleLike}
           >
@@ -54,19 +51,30 @@ function ProductCard({
           </button>
         </div>
 
-        {onAddToCart || onDetails || onEdit || onDelete ? (
-          <div className={styles.cardActions}>
-            {onAddToCart ? (
-              <button
-                type="button"
-                className={styles.btnAddToCart}
-                onClick={() => onAddToCart({ id, name, category, price, stock, image })}
-                disabled={disableAddToCart}
-              >
-                {disableAddToCart ? 'Stock agotado en carrito' : 'Agregar al carrito'}
-              </button>
-            ) : null}
+        {onAddToCart ? (
+          <button
+            type="button"
+            className={styles.btnAdd}
+            onClick={() =>
+              onAddToCart({
+                id,
+                name,
+                category,
+                price,
+                stock,
+                image,
+                description,
+                rating,
+              })
+            }
+            disabled={disableAddToCart}
+          >
+            {disableAddToCart ? 'Sin stock disponible' : 'Agregar al carrito'}
+          </button>
+        ) : null}
 
+        {onDetails || onEdit || onDelete ? (
+          <div className={styles.cardActions}>
             {onDetails ? (
               <button type="button" className={styles.btnDetails} onClick={onDetails}>
                 Más información
