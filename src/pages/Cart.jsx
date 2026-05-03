@@ -1,212 +1,183 @@
-import styles from '../styles/Cart.module.css';
-import { calculateOrderTotals } from '../utils/calculateOrderTotals';
-import { formatCurrency } from '../utils/priceFormat';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
-function Cart({
-  cartItems,
-  onUpdateQuantity,
-  onRemoveItem,
-  onClearCart,
-  onContinueShopping,
-  onProceedToCheckout,
-}) {
+import styles from '../styles/Cart.module.css';
+import { formatCurrency } from '../utils/priceFormat';
+import { calculateOrderTotals } from '../utils/calculateOrderTotals';
+
+function Cart({ items = [], onUpdateQuantity, onClearCart }) {
   const [showTerms, setShowTerms] = useState(false);
 
-  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
-  const { subtotal, subtotalWithoutTax, tax, shipping, shippingOption } = calculateOrderTotals(cartItems);
+  const { subtotal, subtotalWithoutTax, tax, shipping, total } = useMemo(
+    () => calculateOrderTotals(items),
+    [items]
+  );
 
-  if (cartItems.length === 0) {
-    return (
-      <section className={styles.container}>
-        <header className={styles.header}>
-          <h1 className={styles.greeting}>Hola, bienvenido al carrito de compras</h1>
-          <p className={styles.greetingSubtitle}>Revisa tus productos, ajusta cantidades y finaliza tu compra fácilmente.</p>
-        </header>
+  const totalItems = useMemo(
+    () => items.reduce((total, item) => total + item.quantity, 0),
+    [items]
+  );
 
-        <div className={styles.emptyWrapper}>
-          <div className={styles.emptyCard}>
-            <svg className={styles.emptyIcon} viewBox="0 0 64 64" aria-hidden>
-              <path d="M16 16h32l-4 24H20z" fill="#f3f4f6" />
-              <circle cx="24" cy="48" r="4" fill="#ddd" />
-              <circle cx="44" cy="48" r="4" fill="#ddd" />
-            </svg>
-            <h2 className={styles.emptyTitle}>Tu carrito está vacío</h2>
-            <p className={styles.emptySubtitle}>Agrega productos para comenzar tu compra.</p>
-            <div className={styles.emptyActions}>
-              <button type="button" className={styles.btnContinue} onClick={onContinueShopping}>
-                Ir a productos
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  const handleDecrement = (item) => {
-    const next = Math.max(1, item.quantity - 1);
-    onUpdateQuantity(item.id, next);
+  const updateQuantity = (id, delta) => {
+    onUpdateQuantity?.(id, delta);
   };
 
-  const handleIncrement = (item) => {
-    const next = Math.min(item.stock, item.quantity + 1);
-    onUpdateQuantity(item.id, next);
+  const clearCart = () => {
+    onClearCart?.();
   };
 
   return (
     <section className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.greeting}>Hola, bienvenido al carrito de compras</h1>
-        <p className={styles.greetingSubtitle}>Revisa tus productos, ajusta cantidades y finaliza tu compra fácilmente.</p>
+        <h1 className={styles.title}>Hola, bienvenido al carrito de compras</h1>
+        <p className={styles.subtitle}>Revisa tu pedido antes de confirmar la compra</p>
+
+        <div className={styles.headerStats}>
+          <span className={styles.statPill}>{totalItems} articulos</span>
+          <span className={styles.statPill}>Total estimado {formatCurrency(total)}</span>
+        </div>
       </header>
 
-      <div className={styles.content}>
-        <div className={`${styles.list} ${styles.itemsBlock}`}>
-          {cartItems.map((item) => (
-            <article key={item.id} className={styles.item}>
-              <div className={styles.itemMedia}>
-                {item.image ? (
-                  <img className={styles.itemImage} src={item.image} alt={item.name} />
-                ) : (
-                  <div className={styles.itemPlaceholder} />
-                )}
-              </div>
+      <div className={styles.layout}>
+        <div className={styles.listBlock}>
+          {items.length === 0 ? (
+            <p className={styles.empty}>Tu carrito esta vacio. Agrega productos desde la vista Productos.</p>
+          ) : (
+            items.map((item) => (
+              <article key={item.id} className={styles.itemCard}>
+                <img className={styles.itemImage} src={item.image} alt={item.name} />
 
-              <div className={styles.itemBody}>
-                <h3 className={styles.itemTitle}>{item.name}</h3>
-                <div className={styles.metaRow}>
-                  <span className={styles.itemCategory}>{item.category}</span>
-                  <span className={styles.itemStock}>Stock: {item.stock}</span>
+                <div className={styles.itemInfo}>
+                  <p className={styles.itemCategory}>{item.category}</p>
+                  <h2 className={styles.itemName}>{item.name}</h2>
+                  <p className={styles.itemPrice}>{formatCurrency(item.price)}</p>
                 </div>
 
-                <div className={styles.rowBottom}>
-                  <div className={styles.priceAndQty}>
-                    <div className={styles.itemPrice}>{formatCurrency(item.price)}</div>
+                <div className={styles.qtyBox}>
+                  <button
+                    type="button"
+                    className={styles.qtyBtn}
+                    onClick={() => updateQuantity(item.id, -1)}
+                    aria-label={`Quitar una unidad de ${item.name}`}
+                  >
+                    -
+                  </button>
 
-                    <div className={styles.quantityControl}>
-                      <button
-                        type="button"
-                        aria-label={`Disminuir cantidad de ${item.name}`}
-                        className={styles.qtyBtn}
-                        onClick={() => handleDecrement(item)}
-                      >
-                        −
-                      </button>
-                      <input
-                        className={styles.qtyInput}
-                        type="number"
-                        min={1}
-                        max={item.stock}
-                        value={item.quantity}
-                        onChange={(e) => onUpdateQuantity(item.id, Number(e.target.value) || 1)}
-                      />
-                      <button
-                        type="button"
-                        aria-label={`Aumentar cantidad de ${item.name}`}
-                        className={styles.qtyBtn}
-                        onClick={() => handleIncrement(item)}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
+                  <span className={styles.qtyValue}>{item.quantity}</span>
 
-                  <div className={styles.itemActions}>
-                    <button type="button" className={styles.btnRemove} onClick={() => onRemoveItem(item.id)}>
-                      Eliminar
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    className={styles.qtyBtn}
+                    onClick={() => updateQuantity(item.id, 1)}
+                    aria-label={`Agregar una unidad de ${item.name}`}
+                  >
+                    +
+                  </button>
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))
+          )}
         </div>
 
-        <aside className={`${styles.summary} ${styles.summaryBlock}`}>
-          <div className={styles.summaryCard}>
-            <h3 className={styles.summaryTitle}>Resumen de la compra</h3>
-            {cartItems.length > 0 ? (
-              <div className={styles.miniList}>
-                {cartItems.slice(0, 3).map((ci) => (
-                  <div key={ci.id} className={styles.miniItem}>
-                    <img src={ci.image} alt={ci.name} className={styles.miniImage} />
-                    <div className={styles.miniInfo}>
-                      <div className={styles.miniName}>{ci.name}</div>
-                      <div className={styles.miniQty}>x{ci.quantity}</div>
-                    </div>
-                    <div className={styles.miniPrice}>{formatCurrency(ci.price * ci.quantity)}</div>
-                  </div>
-                ))}
+        <aside className={styles.summaryBlock}>
+          <h3 className={styles.summaryTitle}>Resumen</h3>
 
-                {cartItems.length > 3 ? (
-                  <div className={styles.moreItems}>+{cartItems.length - 3} más</div>
-                ) : null}
-              </div>
-            ) : null}
-            <p className={styles.summaryLine}><strong>{totalItems}</strong> artículos</p>
-            <p className={styles.summaryLine}>Subtotal (sin IVA): <strong>{formatCurrency(subtotalWithoutTax)}</strong></p>
-            <p className={styles.summaryLine}>Total IVA 19%: <strong>{formatCurrency(tax)}</strong></p>
-            <p className={styles.summaryLine}>Envío ({shippingOption.label}): <strong>{formatCurrency(shipping)}</strong></p>
-            <p className={styles.freeShippingMsg}>Envío gratis hasta la puerta de tu casa</p>
-            <button
-              type="button"
-              className={styles.termsLink}
-              onClick={() => setShowTerms(true)}
-            >
-              Aplica términos y condiciones
-            </button>
-
-            <p className={styles.summaryLine}><strong>Total: {formatCurrency(subtotal)}</strong></p>
-
-            <div className={styles.summaryButtons}>
-              <button type="button" className={styles.btnClear} onClick={onClearCart}>
-                Vaciar carrito
-              </button>
-
-              <button type="button" className={styles.btnCheckout} onClick={onProceedToCheckout}>
-                Proceder al pago
-              </button>
-            </div>
-
-            <button type="button" className={styles.btnContinueLink} onClick={onContinueShopping}>
-              Seguir comprando
-            </button>
+          <div className={styles.summaryRow}>
+            <span>Productos</span>
+            <span>{totalItems}</span>
           </div>
+
+          <div className={styles.summaryRow}>
+            <span>Subtotal (sin IVA)</span>
+            <span>{formatCurrency(subtotalWithoutTax)}</span>
+          </div>
+
+          <div className={styles.summaryRow}>
+            <span>Total IVA (19%)</span>
+            <span>{formatCurrency(tax)}</span>
+          </div>
+
+          <div className={styles.summaryRow}>
+            <span>Subtotal (con IVA)</span>
+            <span>{formatCurrency(subtotal)}</span>
+          </div>
+
+          <div className={styles.summaryRow}>
+            <span>Envio</span>
+            <span>{shipping === 0 && items.length > 0 ? 'Gratis' : formatCurrency(shipping)}</span>
+          </div>
+
+          <p className={styles.freeShippingMsg}>Envio gratis hasta la puerta de tu casa</p>
+
+          <button
+            type="button"
+            className={styles.termsLink}
+            onClick={() => setShowTerms(true)}
+          >
+            Aplica términos y condiciones
+          </button>
+
+          <div className={`${styles.summaryRow} ${styles.summaryTotal}`}>
+            <span>Total</span>
+            <span>{formatCurrency(total)}</span>
+          </div>
+
+          <button type="button" className={styles.checkoutBtn} disabled={items.length === 0}>
+            Confirmar compra
+          </button>
+
+          <button type="button" className={styles.clearBtn} onClick={clearCart} disabled={items.length === 0}>
+            Vaciar carrito
+          </button>
         </aside>
       </div>
 
       {showTerms ? (
-        <div className={styles.modalBackdrop} onClick={() => setShowTerms(false)} role="presentation">
-          <div
-            className={styles.modalCard}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="terms-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className={styles.modalHeader}>
-              <h4 id="terms-title" className={styles.modalTitle}>Términos y condiciones</h4>
-              <button type="button" className={styles.modalClose} onClick={() => setShowTerms(false)} aria-label="Cerrar términos">
-                ×
-              </button>
+        <div className={styles.modalBackdrop} onClick={() => setShowTerms(false)}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className={styles.modalClose}
+              onClick={() => setShowTerms(false)}
+              aria-label="Cerrar modal"
+            >
+              ✕
+            </button>
+
+            <h2 className={styles.modalTitle}>Términos y condiciones de envío</h2>
+
+            <div className={styles.modalContent}>
+              <p>
+                Nos complace ofrecer envíos gratuitos a nuestros clientes. Sin embargo, esta política está sujeta a los siguientes términos y condiciones:
+              </p>
+
+              <h3>Cobertura geográfica</h3>
+              <p>
+                Los envíos se realizan de forma gratuita únicamente dentro del territorio nacional colombiano. No se contemplan entregas internacionales bajo esta política.
+              </p>
+
+              <h3>Disponibilidad de stock</h3>
+              <p>
+                La política de envío gratis se aplica de acuerdo a la disponibilidad logística de stock en nuestros centros de distribución. La disponibilidad está sujeta a cambios sin previo aviso.
+              </p>
+
+              <h3>Limitaciones</h3>
+              <p>
+                El envío gratuito está sujeto a limitaciones de volumen y peso. Productos que excedan los parámetros establecidos pueden incurrir en costos adicionales de envío.
+              </p>
+
+              <h3>Aceptación</h3>
+              <p>
+                Al continuar con su compra, usted acepta estos términos y condiciones de envío de forma íntegra.
+              </p>
             </div>
 
-            <p className={styles.modalText}>
-              El servicio de envío gratuito aplica exclusivamente para pedidos con entrega dentro del territorio
-              nacional colombiano. La cobertura se limita a direcciones válidas ubicadas en Colombia y está sujeta
-              a verificación logística, cobertura operativa y disponibilidad de entrega en la zona seleccionada.
-              En caso de que la dirección registrada no cumpla con estas condiciones, la tienda podrá informar al
-              usuario sobre eventuales restricciones, tiempos adicionales o alternativas de despacho antes de
-              finalizar la compra. Al continuar con el proceso de pago, el cliente manifiesta haber leído y aceptado
-              estas condiciones de envío.
-            </p>
-
-            <div className={styles.modalActions}>
-              <button type="button" className={styles.btnCheckout} onClick={() => setShowTerms(false)}>
-                Entendido
-              </button>
-            </div>
+            <button
+              type="button"
+              className={styles.modalConfirmBtn}
+              onClick={() => setShowTerms(false)}
+            >
+              He leído y acepto
+            </button>
           </div>
         </div>
       ) : null}
