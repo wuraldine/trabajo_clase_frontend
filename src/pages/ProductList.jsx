@@ -134,6 +134,7 @@ function ProductList({ onAddToCart }) {
 
       {isFormOpen ? (
         <ProductForm
+          key={editingProduct?.id ?? 'create'}
           initialValues={editingProduct}
           isEditing={Boolean(editingProduct)}
           onCancel={handleCloseForm}

@@ -65,6 +65,16 @@ export function loadOrders() {
   }
 }
 
+export function getOrderById(orderId) {
+  const normalizedOrderId = String(orderId ?? '');
+
+  if (!normalizedOrderId) {
+    return null;
+  }
+
+  return loadOrders().find((order) => order.id === normalizedOrderId) ?? null;
+}
+
 export function saveOrder(order) {
   if (typeof window === 'undefined') {
     return;

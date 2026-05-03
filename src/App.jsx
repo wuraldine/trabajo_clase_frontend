@@ -9,6 +9,10 @@ import Checkout from './pages/Checkout';
 import Home from './pages/Home';
 import OrderConfirmation from './pages/OrderConfirmation';
 import ProductList from './pages/ProductList';
+import Account from './pages/Account';
+import OrderDetail from './pages/OrderDetail';
+import UserProfile from './pages/UserProfile';
+import UserOrders from './pages/UserOrders';
 import {
   calculateOrderTotals,
   getPaymentMethodById,
@@ -170,6 +174,11 @@ function App() {
             }
           />
           <Route path="/order-confirmation" element={<OrderConfirmation order={latestOrder} />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/account/order/:orderId" element={<OrderDetail />} />
+          <Route path="/user/profile" element={<UserProfile />} />
+          <Route path="/user/orders" element={<UserOrders />} />
+          <Route path="/user/orders/:orderId" element={<OrderDetail />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

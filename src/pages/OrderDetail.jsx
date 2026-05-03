@@ -1,60 +1,54 @@
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 
 import styles from '../styles/OrderConfirmation.module.css';
+import { getOrderById } from '../utils/ordersStorage';
 import { formatCurrency } from '../utils/priceFormat';
-import { calculateOrderTotals } from '../utils/calculateOrderTotals';
 
-function OrderConfirmation({ order }) {
+function OrderDetail() {
+  const { orderId } = useParams();
   const navigate = useNavigate();
+
+  const order = useMemo(() => {
+    return getOrderById(orderId);
+  }, [orderId]);
 
   if (!order) {
     return (
       <section className={styles.container}>
         <div className={styles.card}>
-          <h1 className={styles.title}>No hay una orden reciente</h1>
-          <p className={styles.subtitle}>
-            El checkout ya se cerró o no existe una compra para mostrar en esta vista.
-          </p>
-          <button type="button" className={styles.primaryButton} onClick={() => navigate('/')}>
-            Volver al inicio
+          <h1 className={styles.title}>Orden no encontrada</h1>
+          <p className={styles.subtitle}>La orden solicitada no existe en el historial.</p>
+          <button type="button" className={styles.primaryButton} onClick={() => navigate('/user/orders')}>
+            Volver al historial
           </button>
         </div>
       </section>
     );
   }
 
-  const formattedDate = new Date(order.createdAt).toLocaleString('es-CO', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
-
-  const totals = calculateOrderTotals(order.items, order.shippingMethod?.id);
-
   return (
     <section className={styles.container}>
       <div className={styles.card}>
-        <p className={styles.eyebrow}>✓ Orden confirmada</p>
-        <h1 className={styles.title}>¡Gracias por tu compra!</h1>
-        <p className={styles.subtitle}>
-          Tu pedido ha sido procesado exitosamente. Recibirás un correo de confirmación con los detalles.
-        </p>
+        <p className={styles.eyebrow}>Orden</p>
+        <h1 className={styles.title}>Detalle de la orden {order.id}</h1>
 
         <div className={styles.metaGrid}>
           <div className={styles.metaCard}>
-            <span className={styles.metaLabel}>Número de orden</span>
-            <span className={styles.metaValue}>{order.id}</span>
-          </div>
-          <div className={styles.metaCard}>
             <span className={styles.metaLabel}>Fecha</span>
-            <span className={styles.metaValue}>{formattedDate}</span>
+            <span className={styles.metaValue}>{new Date(order.createdAt).toLocaleString('es-CO')}</span>
           </div>
           <div className={styles.metaCard}>
             <span className={styles.metaLabel}>Total</span>
-            <span className={styles.metaValue}>{formatCurrency(totals.total)}</span>
+            <span className={styles.metaValue}>{formatCurrency(order.totals?.total)}</span>
           </div>
           <div className={styles.metaCard}>
-            <span className={styles.metaLabel}>Estado</span>
-            <span className={styles.metaValue}>En proceso</span>
+            <span className={styles.metaLabel}>Envío</span>
+            <span className={styles.metaValue}>{order.shippingMethod?.label}</span>
+          </div>
+          <div className={styles.metaCard}>
+            <span className={styles.metaLabel}>Pago</span>
+            <span className={styles.metaValue}>{order.paymentMethod?.label}</span>
           </div>
         </div>
 
@@ -68,6 +62,10 @@ function OrderConfirmation({ order }) {
               <p><strong>Dirección:</strong> {order.customer.address}</p>
               <p><strong>Ciudad:</strong> {order.customer.city}</p>
               <p><strong>Código postal:</strong> {order.customer.postalCode}</p>
+              <p><strong>Método de envío:</strong> {order.shippingMethod?.label}</p>
+              <p><strong>Descripción del envío:</strong> {order.shippingMethod?.description}</p>
+              <p><strong>Método de pago:</strong> {order.paymentMethod?.label}</p>
+              <p><strong>Descripción del pago:</strong> {order.paymentMethod?.description}</p>
             </div>
           </div>
 
@@ -76,11 +74,7 @@ function OrderConfirmation({ order }) {
             <div className={styles.itemList}>
               {order.items.map((item) => (
                 <div key={item.id} className={styles.item}>
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className={styles.itemImage}
-                  />
+                  <img src={item.image} alt={item.name} className={styles.itemImage} />
                   <div>
                     <p className={styles.itemName}>{item.name}</p>
                     <p className={styles.itemMeta}>
@@ -94,30 +88,27 @@ function OrderConfirmation({ order }) {
             <div className={styles.totalRows}>
               <div className={styles.totalRow}>
                 <span>Subtotal:</span>
-                <span>{formatCurrency(totals.subtotal)}</span>
+                <span>{formatCurrency(order.totals?.subtotal)}</span>
               </div>
               <div className={styles.totalRow}>
                 <span>IVA (19%):</span>
-                <span>{formatCurrency(totals.tax)}</span>
+                <span>{formatCurrency(order.totals?.tax)}</span>
               </div>
               <div className={styles.totalRow}>
                 <span>Envío:</span>
-                <span>{totals.shipping === 0 ? 'Gratis' : formatCurrency(totals.shipping)}</span>
+                <span>{order.totals?.shipping === 0 ? 'Gratis' : formatCurrency(order.totals?.shipping)}</span>
               </div>
               <div className={`${styles.totalRow} ${styles.totalRowStrong}`}>
                 <span>Total:</span>
-                <strong>{formatCurrency(totals.total)}</strong>
+                <strong>{formatCurrency(order.totals?.total)}</strong>
               </div>
             </div>
           </div>
         </div>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.secondaryButton} onClick={() => navigate('/user/orders')}>
-            Ver historial
-          </button>
-          <button type="button" className={styles.primaryButton} onClick={() => navigate('/')}>
-            Volver al inicio
+          <button type="button" className={styles.primaryButton} onClick={() => navigate('/user/orders')}>
+            Volver al historial
           </button>
         </div>
       </div>
@@ -125,4 +116,4 @@ function OrderConfirmation({ order }) {
   );
 }
 
-export default OrderConfirmation;
+export default OrderDetail;

@@ -13,6 +13,7 @@ function Navbar({ user, onSignIn, onSignOut, cartItemCount = 0 }) {
     location.pathname === '/cart' ||
     location.pathname === '/checkout' ||
     location.pathname === '/order-confirmation';
+  const isUserActive = location.pathname.startsWith('/user/') || location.pathname.startsWith('/account');
 
   return (
     <nav className={styles.navbar}>
@@ -30,6 +31,12 @@ function Navbar({ user, onSignIn, onSignOut, cartItemCount = 0 }) {
           className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
         >
           Productos
+        </NavLink>
+        <NavLink
+          to="/user/profile"
+          className={() => `${styles.link} ${isUserActive ? styles.active : ''}`}
+        >
+          Mi cuenta
         </NavLink>
         <NavLink to="/cart" className={() => `${styles.link} ${isCartActive ? styles.active : ''}`}>
           Carrito

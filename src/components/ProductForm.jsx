@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import styles from "../styles/ProductForm.module.css";
 
@@ -12,23 +12,14 @@ const emptyValues = {
   
 };
 function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
-  const [values, setValues] = useState(emptyValues);
-
-  // useEffect: si cambia initialValues (prop), precargamos el formulario
-  useEffect(() => {
-    if (initialValues) {
-      setValues({
-        name: initialValues.name ?? "",
-        category: initialValues.category ?? "",
-        price: initialValues.price ?? "",
-        stock: initialValues.stock ?? "",
-        image: initialValues.image ?? "",
-        description: initialValues.description ?? "",
-      });
-    } else {
-      setValues(emptyValues);
-    }
-  }, [initialValues]);
+  const [values, setValues] = useState(() => ({
+    name: initialValues?.name ?? "",
+    category: initialValues?.category ?? "",
+    price: initialValues?.price ?? "",
+    stock: initialValues?.stock ?? "",
+    image: initialValues?.image ?? "",
+    description: initialValues?.description ?? "",
+  }));
 
   const handleChange = (event) => {
     const { name, value } = event.target;
