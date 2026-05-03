@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import useAuth from '../hooks/useAuth';
 import styles from '../styles/UserOrders.module.css';
+import OrderCard from '../components/OrderCard';
 import { loadOrdersByUserId } from '../utils/ordersStorage';
 
 function UserOrders() {
@@ -71,42 +72,11 @@ function UserOrders() {
 
       <div className={styles.list}>
         {orders.map((order) => (
-          <article key={order.id} className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div>
-                <p className={styles.orderId}>{order.id}</p>
-                <p className={styles.orderDate}>
-                  {new Date(order.createdAt).toLocaleString('es-CO')}
-                </p>
-              </div>
-
-              <strong className={styles.orderTotal}>
-                {new Intl.NumberFormat('es-CO', {
-                  style: 'currency',
-                  currency: 'COP',
-                  maximumFractionDigits: 0,
-                }).format(order.totals.total)}
-              </strong>
-            </div>
-
-            <div className={styles.cardMeta}>
-              <span>
-                <strong>{order.items.length}</strong> productos
-              </span>
-              <span>{order.shippingMethod.label}</span>
-              <span>{order.paymentMethod.label}</span>
-            </div>
-
-            <div className={styles.cardActions}>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                onClick={() => navigate(`/user/orders/${order.id}`)}
-              >
-                Ver detalle
-              </button>
-            </div>
-          </article>
+          <OrderCard
+            key={order.id}
+            order={order}
+            onOpen={(id) => navigate(`/user/orders/${id}`)}
+          />
         ))}
       </div>
     </section>
