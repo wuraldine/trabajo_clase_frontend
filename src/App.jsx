@@ -29,7 +29,91 @@ function App() {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
   }, [cartItems]);
 
-  /* lógica existente del carrito */
+  const handleNavigate = (page) => {
+    setActivePage(page);
+    if (page !== 'category') {
+      setSelectedCategory(null);
+    }
+  };
+
+  const handleOpenCategory = (category) => {
+    setSelectedCategory(category);
+    setActivePage('category');
+  };
+
+  const handleBackFromCategory = () => {
+    setSelectedCategory(null);
+    setActivePage('home');
+  };
+
+  const handleAddToCart = (product) => {
+    if (!product || !Number.isFinite(Number(product.id))) {
+      return;
+    }
+
+    setCartItems((currentItems) => {
+      const existingItem = currentItems.find((item) => item.id === product.id);
+      const stock =
+        Number.isFinite(Number(product.stock)) && Number(product.stock) > 0
+          ? Number(product.stock)
+          : 1;
+
+      if (!existingItem) {
+        return [
+          ...currentItems,
+          {
+            id: Number(product.id),
+            name: product.name,
+            category: product.category,
+            price: Number(product.price) || 0,
+            stock,
+            image: product.image,
+            quantity: 1,
+          },
+        ];
+      }
+
+      return currentItems.map((item) => {
+        if (item.id !== product.id) {
+          return item;
+        }
+
+        return {
+          ...item,
+          stock,
+          quantity: Math.min(item.quantity + 1, stock),
+        };
+      });
+    });
+  };
+
+  const handleUpdateCartItemQuantity = (productId, delta) => {
+    setCartItems((currentItems) =>
+      currentItems.flatMap((item) => {
+        if (item.id !== productId) {
+          return [item];
+        }
+
+        const stock =
+          Number.isFinite(Number(item.stock)) && Number(item.stock) > 0 ? Number(item.stock) : 1;
+        const nextQuantity = Math.floor(Number(item.quantity) + Number(delta));
+
+        if (nextQuantity <= 0) {
+          return [];
+        }
+
+        return [{ ...item, quantity: Math.min(stock, nextQuantity) }];
+      })
+    );
+  };
+
+  const handleRemoveCartItem = (productId) => {
+    setCartItems((currentItems) => currentItems.filter((item) => item.id !== productId));
+  };
+
+  const handleClearCart = () => {
+    setCartItems([]);
+  };
 
   const handleStartCheckout = () => {
     setActivePage('checkout');
@@ -64,23 +148,67 @@ function App() {
     setActivePage('home');
   };
 
+  const cartItemCount = useMemo(
+    () => cartItems.reduce((total, item) => total + item.quantity, 0),
+    [cartItems]
+  );
+
   let page = <Home onOpenCategory={handleOpenCategory} />;
 
   if (activePage === 'category') {
-    page = <CategoryProducts /* props */ />;
+    page = (
+      <CategoryProducts
+        category={selectedCategory}
+        onBack={handleBackFromCategory}
+        cartItems={cartItems}
+        onAddToCart={handleAddToCart}
+      />
+    );
   } else if (activePage === 'products') {
-    page = <ProductList />;
+    page = <ProductList onAddToCart={handleAddToCart} />;
   } else if (activePage === 'cart') {
-    page = <Cart /* props */ />;
+    page = (
+      <Cart
+        cartItems={cartItems}
+        items={cartItems}
+        onUpdateQuantity={handleUpdateCartItemQuantity}
+        onRemoveItem={handleRemoveCartItem}
+        onClearCart={handleClearCart}
+        onContinueShopping={() => handleNavigate('products')}
+        onProceedToCheckout={handleStartCheckout}
+      />
+    );
   } else if (activePage === 'checkout') {
-    page = <Checkout /* props */ />;
+    page = (
+      <Checkout
+        cartItems={cartItems}
+        user={user}
+        onBack={() => handleNavigate('cart')}
+        onCompleteCheckout={handleCompleteCheckout}
+      />
+    );
   } else if (activePage === 'order-confirmation') {
     page = <OrderConfirmation order={latestOrder} onBackHome={handleBackHomeAfterOrder} />;
   }
 
+  const handleSignIn = () => {
+    setUser({ name: 'Usuario' });
+  };
+
+  const handleSignOut = () => {
+    setUser(null);
+  };
+
   return (
     <div className="app">
-      <Header /* props */ />
+      <Header
+        activePage={activePage}
+        onNavigate={handleNavigate}
+        user={user}
+        onSignIn={handleSignIn}
+        onSignOut={handleSignOut}
+        cartItemCount={cartItemCount}
+      />
       <main className="main">{page}</main>
       <Footer />
     </div>

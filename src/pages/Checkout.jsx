@@ -102,7 +102,228 @@ function Checkout({ cartItems, user, onBack, onCompleteCheckout }) {
 
   return (
     <section className={styles.container}>
-      /* header, formulario, opciones y resumen */
+      <div className={styles.wrapper}>
+        {/* Header */}
+        <div className={styles.header}>
+          <button type="button" className={styles.backButton} onClick={onBack}>
+            ← Volver
+          </button>
+          <h1 className={styles.title}>Checkout</h1>
+        </div>
+
+        {/* Main Content */}
+        <div className={styles.grid}>
+          {/* Formulario */}
+          <form className={styles.form} onSubmit={handleSubmit}>
+            {/* Cliente Info */}
+            <fieldset className={styles.fieldset}>
+              <legend className={styles.legend}>Información Personal</legend>
+              <div className={styles.field}>
+                <label htmlFor="fullName" className={styles.label}>
+                  Nombre completo
+                </label>
+                <input
+                  id="fullName"
+                  type="text"
+                  name="fullName"
+                  value={values.fullName}
+                  onChange={handleChange}
+                  className={styles.input}
+                  placeholder="Juan Pérez"
+                />
+                {errors.fullName && <span className={styles.error}>{errors.fullName}</span>}
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="email" className={styles.label}>
+                  Correo electrónico
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={values.email}
+                  onChange={handleChange}
+                  className={styles.input}
+                  placeholder="tu@correo.com"
+                />
+                {errors.email && <span className={styles.error}>{errors.email}</span>}
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="phone" className={styles.label}>
+                  Teléfono
+                </label>
+                <input
+                  id="phone"
+                  type="tel"
+                  name="phone"
+                  value={values.phone}
+                  onChange={handleChange}
+                  className={styles.input}
+                  placeholder="+57 123 456 7890"
+                />
+                {errors.phone && <span className={styles.error}>{errors.phone}</span>}
+              </div>
+            </fieldset>
+
+            {/* Dirección */}
+            <fieldset className={styles.fieldset}>
+              <legend className={styles.legend}>Dirección de Entrega</legend>
+              <div className={styles.field}>
+                <label htmlFor="address" className={styles.label}>
+                  Dirección
+                </label>
+                <input
+                  id="address"
+                  type="text"
+                  name="address"
+                  value={values.address}
+                  onChange={handleChange}
+                  className={styles.input}
+                  placeholder="Calle 123 #456-789"
+                />
+                {errors.address && <span className={styles.error}>{errors.address}</span>}
+              </div>
+
+              <div className={styles.twoColumns}>
+                <div className={styles.field}>
+                  <label htmlFor="city" className={styles.label}>
+                    Ciudad
+                  </label>
+                  <input
+                    id="city"
+                    type="text"
+                    name="city"
+                    value={values.city}
+                    onChange={handleChange}
+                    className={styles.input}
+                    placeholder="Bogotá"
+                  />
+                  {errors.city && <span className={styles.error}>{errors.city}</span>}
+                </div>
+
+                <div className={styles.field}>
+                  <label htmlFor="postalCode" className={styles.label}>
+                    Código Postal
+                  </label>
+                  <input
+                    id="postalCode"
+                    type="text"
+                    name="postalCode"
+                    value={values.postalCode}
+                    onChange={handleChange}
+                    className={styles.input}
+                    placeholder="110111"
+                  />
+                  {errors.postalCode && <span className={styles.error}>{errors.postalCode}</span>}
+                </div>
+              </div>
+            </fieldset>
+
+            {/* Métodos */}
+            <fieldset className={styles.fieldset}>
+              <legend className={styles.legend}>Método de Envío</legend>
+              {SHIPPING_OPTIONS.map((option) => (
+                <label key={option.id} className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="shippingMethod"
+                    value={option.id}
+                    checked={values.shippingMethod === option.id}
+                    onChange={handleChange}
+                    className={styles.radio}
+                  />
+                  <div className={styles.radioContent}>
+                    <strong>{option.label}</strong>
+                    <p>{option.description}</p>
+                    <span className={styles.price}>
+                      {formatCurrency(option.price)}
+                    </span>
+                  </div>
+                </label>
+              ))}
+              {errors.shippingMethod && (
+                <span className={styles.error}>{errors.shippingMethod}</span>
+              )}
+            </fieldset>
+
+            <fieldset className={styles.fieldset}>
+              <legend className={styles.legend}>Método de Pago</legend>
+              {PAYMENT_METHODS.map((method) => (
+                <label key={method.id} className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value={method.id}
+                    checked={values.paymentMethod === method.id}
+                    onChange={handleChange}
+                    className={styles.radio}
+                  />
+                  <div className={styles.radioContent}>
+                    <strong>{method.label}</strong>
+                    <p>{method.description}</p>
+                  </div>
+                </label>
+              ))}
+              {errors.paymentMethod && (
+                <span className={styles.error}>{errors.paymentMethod}</span>
+              )}
+            </fieldset>
+
+            {/* Botones */}
+            <div className={styles.actions}>
+              <button type="submit" className={styles.primaryButton}>
+                Confirmar Pedido
+              </button>
+              <button type="button" className={styles.secondaryButton} onClick={onBack}>
+                Volver al carrito
+              </button>
+            </div>
+          </form>
+
+          {/* Resumen del Pedido */}
+          <aside className={styles.summary}>
+            <h2 className={styles.summaryTitle}>Resumen del Pedido</h2>
+
+            {/* Items */}
+            <div className={styles.items}>
+              {cartItems.map((item) => (
+                <div key={item.id} className={styles.item}>
+                  <img src={item.image} alt={item.name} className={styles.itemImage} />
+                  <div className={styles.itemInfo}>
+                    <h3 className={styles.itemName}>{item.name}</h3>
+                    <p className={styles.itemQty}>Cantidad: {item.quantity}</p>
+                  </div>
+                  <span className={styles.itemPrice}>
+                    {formatCurrency(item.price * item.quantity)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Totales */}
+            <div className={styles.totals}>
+              <div className={styles.totalRow}>
+                <span>Subtotal (sin IVA)</span>
+                <strong>{formatCurrency(totals.subtotalWithoutTax)}</strong>
+              </div>
+              <div className={styles.totalRow}>
+                <span>IVA (19%)</span>
+                <strong>{formatCurrency(totals.tax)}</strong>
+              </div>
+              <div className={styles.totalRow}>
+                <span>Envío</span>
+                <strong>{formatCurrency(totals.shipping)}</strong>
+              </div>
+              <div className={styles.totalRowFinal}>
+                <span>Total</span>
+                <strong>{formatCurrency(totals.total)}</strong>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
     </section>
   );
 }
