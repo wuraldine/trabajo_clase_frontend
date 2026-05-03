@@ -77,7 +77,7 @@ function Cart({
                 <div className={styles.qtyBox}>
                   <button
                     type="button"
-                    className={styles.qtyBtn}
+                    className={styles.btnQuantity}
                     onClick={() => updateQuantity(item.id, -1)}
                     aria-label={`Quitar una unidad de ${item.name}`}
                   >
@@ -88,7 +88,7 @@ function Cart({
 
                   <button
                     type="button"
-                    className={styles.qtyBtn}
+                    className={styles.btnQuantity}
                     onClick={() => updateQuantity(item.id, 1)}
                     aria-label={`Agregar una unidad de ${item.name}`}
                   >
@@ -97,7 +97,7 @@ function Cart({
 
                   <button
                     type="button"
-                    className={styles.itemRemoveBtn}
+                    className={styles.btnRemove}
                     onClick={() => removeItem(item.id)}
                     aria-label={`Eliminar ${item.name} del carrito`}
                   >
@@ -158,18 +158,18 @@ function Cart({
 
           <button
             type="button"
-            className={styles.checkoutBtn}
+            className={styles.btnCheckout}
             onClick={proceedToCheckout}
             disabled={cart.length === 0}
           >
             Confirmar compra
           </button>
 
-          <button type="button" className={styles.clearBtn} onClick={clearCart} disabled={cart.length === 0}>
+          <button type="button" className={styles.btnClear} onClick={clearCart} disabled={cart.length === 0}>
             Vaciar carrito
           </button>
 
-          <button type="button" className={styles.termsLink} onClick={continueShopping}>
+          <button type="button" className={styles.btnContinue} onClick={continueShopping}>
             Seguir comprando
           </button>
         </aside>

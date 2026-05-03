@@ -163,6 +163,24 @@
   color: #7c1357;
 }
 
+.btnRemove {
+  min-width: 72px;
+  height: 28px;
+  padding: 0 0.65rem;
+  line-height: 1;
+  border: 1px solid #f2badf;
+  border-radius: 999px;
+  color: #7c1357;
+  background: #fff;
+  font-size: 0.78rem;
+}
+
+.btnRemove:hover {
+  background: #fff0f9;
+  border-color: #e48bc0;
+  color: #7c1357;
+}
+
 .qtyBtn {
   display: inline-flex;
   align-items: center;
@@ -181,6 +199,25 @@
 }
 
 .qtyBtn:hover {
+  background: linear-gradient(160deg, #ff41b2, #a3006f);
+}
+
+.btnQuantity {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  line-height: 1;
+  border: none;
+  border-radius: 999px;
+  color: white;
+  background: linear-gradient(160deg, #ff4db8, #c40084);
+  font-size: 1rem;
+}
+
+.btnQuantity:hover {
   background: linear-gradient(160deg, #ff41b2, #a3006f);
 }
 
@@ -226,6 +263,29 @@
   color: #410f34;
 }
 
+.btnContinue,
+.btnClear,
+.btnCheckout,
+.btnRemove,
+.btnQuantity {
+  border: none;
+  border-radius: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btnCheckout {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.95rem 1rem;
+  background: var(--primary);
+  color: white;
+}
+
+.btnCheckout:hover {
+  background: var(--primary-dark);
+}
+
 .checkoutBtn,
 .clearBtn {
   width: 100%;
@@ -253,6 +313,34 @@
   color: #8a1f69;
   background: #ffe5f5;
   border: 1px solid #f5b9df;
+}
+
+.btnClear {
+  width: 100%;
+  margin-top: 0.55rem;
+  color: #8a1f69;
+  background: #ffe5f5;
+  border: 1px solid #f5b9df;
+  padding: 0.75rem 1rem;
+}
+
+.btnClear:disabled,
+.btnCheckout:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btnContinue {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.7rem 1rem;
+  color: #7a2b67;
+  background: #fff3fb;
+  border: 1px solid #f5b9df;
+}
+
+.btnContinue:hover {
+  background: #ffe8f6;
 }
 
 @media (max-width: 900px) {
