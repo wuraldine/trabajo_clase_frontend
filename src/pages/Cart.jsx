@@ -101,7 +101,7 @@ function Cart({
                     onClick={() => removeItem(item.id)}
                     aria-label={`Eliminar ${item.name} del carrito`}
                   >
-                    ×
+                    Eliminar
                   </button>
                 </div>
               </article>
