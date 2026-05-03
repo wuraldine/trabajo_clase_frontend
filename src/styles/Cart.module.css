@@ -139,6 +139,31 @@
   background: #ffeaf7;
 }
 
+.itemRemoveBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  line-height: 1;
+  border: 1px solid #f2badf;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #7c1357;
+  background: #fff;
+  font-size: 1.15rem;
+  font-weight: 900;
+  text-shadow: 0 0 0 currentColor;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.itemRemoveBtn:hover {
+  background: #fff0f9;
+  border-color: #e48bc0;
+  color: #7c1357;
+}
+
 .qtyBtn {
   display: inline-flex;
   align-items: center;

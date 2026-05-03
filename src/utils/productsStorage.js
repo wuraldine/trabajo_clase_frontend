@@ -18,12 +18,27 @@ const clampLikes = (value) => {
   return Math.max(0, Math.trunc(parsed));
 };
 
+const normalizeImage = (image, seedImage) => {
+  if (!image) {
+    return seedImage ?? '';
+  }
+
+  const imageValue = String(image);
+
+  if (imageValue.startsWith('src/assets/')) {
+    return seedImage ?? imageValue;
+  }
+
+  return imageValue;
+};
+
 const normalizeProduct = (product) => {
   const seedProduct = seedById.get(product?.id);
 
   return {
     ...seedProduct,
     ...product,
+    image: normalizeImage(product?.image, seedProduct?.image),
     rating: clampRating(product?.rating ?? seedProduct?.rating ?? DEFAULT_RATING),
     likes: clampLikes(product?.likes ?? seedProduct?.likes ?? DEFAULT_LIKES),
     isLiked: Boolean(product?.isLiked ?? seedProduct?.isLiked ?? false),

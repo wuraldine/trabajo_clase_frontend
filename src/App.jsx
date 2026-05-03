@@ -79,7 +79,7 @@ function App() {
     });
   };
 
-  const handleUpdateCartItemQuantity = (productId, nextQuantity) => {
+  const handleUpdateCartItemQuantity = (productId, delta) => {
     setCartItems((currentItems) =>
       currentItems.flatMap((item) => {
         if (item.id !== productId) {
@@ -88,12 +88,13 @@ function App() {
 
         const stock =
           Number.isFinite(Number(item.stock)) && Number(item.stock) > 0 ? Number(item.stock) : 1;
-        const normalizedQuantity = Math.max(
-          1,
-          Math.min(stock, Math.floor(Number(nextQuantity) || 1))
-        );
+        const nextQuantity = Math.floor(Number(item.quantity) + Number(delta));
 
-        return normalizedQuantity > 0 ? [{ ...item, quantity: normalizedQuantity }] : [];
+        if (nextQuantity <= 0) {
+          return [];
+        }
+
+        return [{ ...item, quantity: Math.min(stock, nextQuantity) }];
       })
     );
   };
@@ -128,7 +129,7 @@ function App() {
     if (activePage === 'cart') {
       return (
         <Cart
-          cartItems={cartItems}
+          items={cartItems}
           onUpdateQuantity={handleUpdateCartItemQuantity}
           onRemoveItem={handleRemoveCartItem}
           onClearCart={handleClearCart}

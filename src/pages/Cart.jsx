@@ -1,28 +1,50 @@
 import { useMemo, useState } from 'react';
 
 import styles from '../styles/Cart.module.css';
-import { formatCurrency } from '../utils/priceFormat';
-import { calculateOrderTotals } from '../utils/calculateOrderTotals';
+import { calculateCartSubtotal } from '../utils/calculateOrderTotals';
+import { formatCOP } from '../utils/formatCOP';
 
-function Cart({ items = [], onUpdateQuantity, onClearCart }) {
+function Cart({
+  cartItems = [],
+  items,
+  onUpdateQuantity,
+  onRemoveItem,
+  onClearCart,
+  onContinueShopping,
+  onProceedToCheckout,
+}) {
   const [showTerms, setShowTerms] = useState(false);
+  const cart = cartItems.length > 0 || !items ? cartItems : items;
 
-  const { subtotal, subtotalWithoutTax, tax, shipping, total } = useMemo(
-    () => calculateOrderTotals(items),
-    [items]
-  );
+  const totalItems = useMemo(() => cart.reduce((total, item) => total + item.quantity, 0), [cart]);
+  const subtotal = useMemo(() => calculateCartSubtotal(cart), [cart]);
 
-  const totalItems = useMemo(
-    () => items.reduce((total, item) => total + item.quantity, 0),
-    [items]
+  const subtotalWithoutTax = useMemo(
+    () => Math.round(subtotal / 1.19),
+    [subtotal]
   );
+  const tax = subtotal - subtotalWithoutTax;
+  const shipping = cart.length > 0 ? 0 : 0;
+  const total = subtotal + shipping;
 
   const updateQuantity = (id, delta) => {
     onUpdateQuantity?.(id, delta);
   };
 
+  const removeItem = (id) => {
+    onRemoveItem?.(id);
+  };
+
   const clearCart = () => {
     onClearCart?.();
+  };
+
+  const continueShopping = () => {
+    onContinueShopping?.();
+  };
+
+  const proceedToCheckout = () => {
+    onProceedToCheckout?.();
   };
 
   return (
@@ -33,23 +55,23 @@ function Cart({ items = [], onUpdateQuantity, onClearCart }) {
 
         <div className={styles.headerStats}>
           <span className={styles.statPill}>{totalItems} articulos</span>
-          <span className={styles.statPill}>Total estimado {formatCurrency(total)}</span>
+          <span className={styles.statPill}>Total estimado {formatCOP(total)}</span>
         </div>
       </header>
 
       <div className={styles.layout}>
         <div className={styles.listBlock}>
-          {items.length === 0 ? (
+          {cart.length === 0 ? (
             <p className={styles.empty}>Tu carrito esta vacio. Agrega productos desde la vista Productos.</p>
           ) : (
-            items.map((item) => (
+            cart.map((item) => (
               <article key={item.id} className={styles.itemCard}>
                 <img className={styles.itemImage} src={item.image} alt={item.name} />
 
                 <div className={styles.itemInfo}>
                   <p className={styles.itemCategory}>{item.category}</p>
                   <h2 className={styles.itemName}>{item.name}</h2>
-                  <p className={styles.itemPrice}>{formatCurrency(item.price)}</p>
+                  <p className={styles.itemPrice}>{formatCOP(item.price)}</p>
                 </div>
 
                 <div className={styles.qtyBox}>
@@ -72,6 +94,15 @@ function Cart({ items = [], onUpdateQuantity, onClearCart }) {
                   >
                     +
                   </button>
+
+                  <button
+                    type="button"
+                    className={styles.itemRemoveBtn}
+                    onClick={() => removeItem(item.id)}
+                    aria-label={`Eliminar ${item.name} del carrito`}
+                  >
+                    ×
+                  </button>
                 </div>
               </article>
             ))
@@ -81,6 +112,10 @@ function Cart({ items = [], onUpdateQuantity, onClearCart }) {
         <aside className={styles.summaryBlock}>
           <h3 className={styles.summaryTitle}>Resumen</h3>
 
+          {cart.length === 0 ? (
+            <p className={styles.summaryCaption}>No hay productos en el carrito.</p>
+          ) : null}
+
           <div className={styles.summaryRow}>
             <span>Productos</span>
             <span>{totalItems}</span>
@@ -88,22 +123,22 @@ function Cart({ items = [], onUpdateQuantity, onClearCart }) {
 
           <div className={styles.summaryRow}>
             <span>Subtotal (sin IVA)</span>
-            <span>{formatCurrency(subtotalWithoutTax)}</span>
+            <span>{formatCOP(subtotalWithoutTax)}</span>
           </div>
 
           <div className={styles.summaryRow}>
             <span>Total IVA (19%)</span>
-            <span>{formatCurrency(tax)}</span>
+            <span>{formatCOP(tax)}</span>
           </div>
 
           <div className={styles.summaryRow}>
             <span>Subtotal (con IVA)</span>
-            <span>{formatCurrency(subtotal)}</span>
+            <span>{formatCOP(subtotal)}</span>
           </div>
 
           <div className={styles.summaryRow}>
             <span>Envio</span>
-            <span>{shipping === 0 && items.length > 0 ? 'Gratis' : formatCurrency(shipping)}</span>
+            <span>{shipping === 0 && cart.length > 0 ? 'Gratis' : formatCOP(shipping)}</span>
           </div>
 
           <p className={styles.freeShippingMsg}>Envio gratis hasta la puerta de tu casa</p>
@@ -118,15 +153,24 @@ function Cart({ items = [], onUpdateQuantity, onClearCart }) {
 
           <div className={`${styles.summaryRow} ${styles.summaryTotal}`}>
             <span>Total</span>
-            <span>{formatCurrency(total)}</span>
+            <span>{formatCOP(total)}</span>
           </div>
 
-          <button type="button" className={styles.checkoutBtn} disabled={items.length === 0}>
+          <button
+            type="button"
+            className={styles.checkoutBtn}
+            onClick={proceedToCheckout}
+            disabled={cart.length === 0}
+          >
             Confirmar compra
           </button>
 
-          <button type="button" className={styles.clearBtn} onClick={clearCart} disabled={items.length === 0}>
+          <button type="button" className={styles.clearBtn} onClick={clearCart} disabled={cart.length === 0}>
             Vaciar carrito
+          </button>
+
+          <button type="button" className={styles.termsLink} onClick={continueShopping}>
+            Seguir comprando
           </button>
         </aside>
       </div>
