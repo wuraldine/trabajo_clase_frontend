@@ -17,16 +17,18 @@ function ProductCard({
   onEdit,
   onDelete,
   disableAddToCart = false,
+  likes: initialLikes = 0,
+  isLiked: initialIsLiked = false,
 }) {
-  const [likes, setLikes] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
+  const [likes, setLikes] = useState(Number(initialLikes) || 0);
+  const [isLiked, setIsLiked] = useState(Boolean(initialIsLiked));
 
   const handleLike = () => {
     if (isLiked) {
-      setLikes(likes - 1);
+      setLikes((n) => Math.max(0, n - 1));
       setIsLiked(false);
     } else {
-      setLikes(likes + 1);
+      setLikes((n) => n + 1);
       setIsLiked(true);
     }
   };
