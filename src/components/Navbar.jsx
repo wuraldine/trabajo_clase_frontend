@@ -1,19 +1,35 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 import logo from '../assets/logo-cesde.jpg';
+import useAuth from '../hooks/useAuth';
 import styles from '../styles/Navbar.module.css';
 
-function Navbar({ user, onSignIn, onSignOut, cartItemCount = 0 }) {
+function Navbar({ user, onSignOut, cartItemCount = 0 }) {
   const userLabel = user?.name ?? 'Invitado';
   const isLoggedIn = Boolean(user);
+  const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
 
   const isHomeActive = location.pathname === '/' || location.pathname.startsWith('/category/');
   const isCartActive =
     location.pathname === '/cart' ||
     location.pathname === '/checkout' ||
     location.pathname === '/order-confirmation';
-  const isUserActive = location.pathname.startsWith('/user/') || location.pathname.startsWith('/account');
+  const isAccountActive =
+    location.pathname.startsWith('/user/') ||
+    location.pathname === '/login' ||
+    location.pathname === '/register';
+
+  const handleAccountNavigation = () => {
+    navigate(isLoggedIn ? '/user/profile' : '/login');
+  };
+
+  const handleSignOut = () => {
+    logout();
+    onSignOut?.();
+    navigate('/', { replace: true });
+  };
 
   return (
     <nav className={styles.navbar}>
@@ -32,29 +48,32 @@ function Navbar({ user, onSignIn, onSignOut, cartItemCount = 0 }) {
         >
           Productos
         </NavLink>
-        <NavLink
-          to="/user/profile"
-          className={() => `${styles.link} ${isUserActive ? styles.active : ''}`}
-        >
-          Mi cuenta
-        </NavLink>
         <NavLink to="/cart" className={() => `${styles.link} ${isCartActive ? styles.active : ''}`}>
           Carrito
           {cartItemCount > 0 ? <span className={styles.cartBadge}>{cartItemCount}</span> : null}
         </NavLink>
+        <button
+          type="button"
+          className={`${styles.link} ${isAccountActive ? styles.active : ''}`}
+          onClick={handleAccountNavigation}
+        >
+          Mi cuenta
+        </button>
       </div>
 
       <div className={styles.auth}>
         <span className={styles.userName}>{userLabel}</span>
 
         {isLoggedIn ? (
-          <button type="button" className={styles.authBtn} onClick={onSignOut}>
-            Sign out
+          <button type="button" className={styles.authBtn} onClick={handleSignOut}>
+            Salir
           </button>
         ) : (
-          <button type="button" className={styles.authBtn} onClick={onSignIn}>
-            Sign in
-          </button>
+          <div className={styles.guestActions}>
+            <button type="button" className={styles.authBtn} onClick={() => navigate('/login')}>
+              Ingresar
+            </button>
+          </div>
         )}
       </div>
     </nav>

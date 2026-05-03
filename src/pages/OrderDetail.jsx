@@ -1,117 +1,157 @@
 import { useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import styles from '../styles/OrderConfirmation.module.css';
-import { getOrderById } from '../utils/ordersStorage';
-import { formatCurrency } from '../utils/priceFormat';
+import useAuth from '../hooks/useAuth';
+import styles from '../styles/OrderDetail.module.css';
+import { formatCOP } from '../utils/formatCOP';
+import { loadOrdersByUserId } from '../utils/ordersStorage';
 
 function OrderDetail() {
-  const { orderId } = useParams();
   const navigate = useNavigate();
+  const { orderId } = useParams();
+  const { currentUser } = useAuth();
 
-  const order = useMemo(() => {
-    return getOrderById(orderId);
-  }, [orderId]);
+  const order = useMemo(
+    () =>
+      loadOrdersByUserId(currentUser?.id).find((savedOrder) => savedOrder.id === orderId) ?? null,
+    [currentUser?.id, orderId]
+  );
 
   if (!order) {
     return (
       <section className={styles.container}>
-        <div className={styles.card}>
+        <div className={styles.emptyState}>
+          <p className={styles.eyebrow}>Semana 11</p>
           <h1 className={styles.title}>Orden no encontrada</h1>
-          <p className={styles.subtitle}>La orden solicitada no existe en el historial.</p>
-          <button type="button" className={styles.primaryButton} onClick={() => navigate('/user/orders')}>
-            Volver al historial
-          </button>
+          <p className={styles.subtitle}>
+            El identificador solicitado no pertenece al usuario autenticado o ya no está disponible
+            en este navegador.
+          </p>
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => navigate('/user/orders')}
+            >
+              Volver al historial
+            </button>
+            <button type="button" className={styles.primaryButton} onClick={() => navigate('/')}>
+              Ir al inicio
+            </button>
+          </div>
         </div>
       </section>
     );
   }
 
+  const formattedDate = new Date(order.createdAt).toLocaleString('es-CO', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+
   return (
     <section className={styles.container}>
-      <div className={styles.card}>
-        <p className={styles.eyebrow}>Orden</p>
-        <h1 className={styles.title}>Detalle de la orden {order.id}</h1>
-
-        <div className={styles.metaGrid}>
-          <div className={styles.metaCard}>
-            <span className={styles.metaLabel}>Fecha</span>
-            <span className={styles.metaValue}>{new Date(order.createdAt).toLocaleString('es-CO')}</span>
-          </div>
-          <div className={styles.metaCard}>
-            <span className={styles.metaLabel}>Total</span>
-            <span className={styles.metaValue}>{formatCurrency(order.totals?.total)}</span>
-          </div>
-          <div className={styles.metaCard}>
-            <span className={styles.metaLabel}>Envío</span>
-            <span className={styles.metaValue}>{order.shippingMethod?.label}</span>
-          </div>
-          <div className={styles.metaCard}>
-            <span className={styles.metaLabel}>Pago</span>
-            <span className={styles.metaValue}>{order.paymentMethod?.label}</span>
-          </div>
-        </div>
-
-        <div className={styles.layout}>
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Información de entrega</h3>
-            <div className={styles.infoList}>
-              <p><strong>Nombre:</strong> {order.customer.fullName}</p>
-              <p><strong>Email:</strong> {order.customer.email}</p>
-              <p><strong>Teléfono:</strong> {order.customer.phone}</p>
-              <p><strong>Dirección:</strong> {order.customer.address}</p>
-              <p><strong>Ciudad:</strong> {order.customer.city}</p>
-              <p><strong>Código postal:</strong> {order.customer.postalCode}</p>
-              <p><strong>Método de envío:</strong> {order.shippingMethod?.label}</p>
-              <p><strong>Descripción del envío:</strong> {order.shippingMethod?.description}</p>
-              <p><strong>Método de pago:</strong> {order.paymentMethod?.label}</p>
-              <p><strong>Descripción del pago:</strong> {order.paymentMethod?.description}</p>
-            </div>
-          </div>
-
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Resumen de compra</h3>
-            <div className={styles.itemList}>
-              {order.items.map((item) => (
-                <div key={item.id} className={styles.item}>
-                  <img src={item.image} alt={item.name} className={styles.itemImage} />
-                  <div>
-                    <p className={styles.itemName}>{item.name}</p>
-                    <p className={styles.itemMeta}>
-                      {item.quantity} × {formatCurrency(item.price)} = {formatCurrency(item.price * item.quantity)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className={styles.totalRows}>
-              <div className={styles.totalRow}>
-                <span>Subtotal:</span>
-                <span>{formatCurrency(order.totals?.subtotal)}</span>
-              </div>
-              <div className={styles.totalRow}>
-                <span>IVA (19%):</span>
-                <span>{formatCurrency(order.totals?.tax)}</span>
-              </div>
-              <div className={styles.totalRow}>
-                <span>Envío:</span>
-                <span>{order.totals?.shipping === 0 ? 'Gratis' : formatCurrency(order.totals?.shipping)}</span>
-              </div>
-              <div className={`${styles.totalRow} ${styles.totalRowStrong}`}>
-                <span>Total:</span>
-                <strong>{formatCurrency(order.totals?.total)}</strong>
-              </div>
-            </div>
-          </div>
+      <header className={styles.header}>
+        <div>
+          <p className={styles.eyebrow}>Semana 11</p>
+          <h1 className={styles.title}>Detalle de orden</h1>
+          <p className={styles.subtitle}>
+            Consulta el pedido completo, con los datos del cliente, envio, pago y totales.
+          </p>
         </div>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.primaryButton} onClick={() => navigate('/user/orders')}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => navigate('/user/orders')}
+          >
             Volver al historial
           </button>
+          <button
+            type="button"
+            className={styles.primaryButton}
+            onClick={() => navigate('/user/profile')}
+          >
+            Mi perfil
+          </button>
+        </div>
+      </header>
+
+      <div className={styles.summaryGrid}>
+        <div className={styles.summaryCard}>
+          <span className={styles.label}>Orden</span>
+          <strong>{order.id}</strong>
+        </div>
+        <div className={styles.summaryCard}>
+          <span className={styles.label}>Fecha</span>
+          <strong>{formattedDate}</strong>
+        </div>
+        <div className={styles.summaryCard}>
+          <span className={styles.label}>Envio</span>
+          <strong>{order.shippingMethod.label}</strong>
+        </div>
+        <div className={styles.summaryCard}>
+          <span className={styles.label}>Pago</span>
+          <strong>{order.paymentMethod.label}</strong>
         </div>
       </div>
+
+      <div className={styles.layout}>
+        <section className={styles.card}>
+          <h2 className={styles.sectionTitle}>Cliente</h2>
+          <div className={styles.infoList}>
+            <p>
+              <strong>{order.customer.fullName}</strong>
+            </p>
+            <p>{order.customer.email}</p>
+            <p>{order.customer.phone}</p>
+            <p>{order.customer.address}</p>
+            <p>
+              {order.customer.city} - {order.customer.postalCode}
+            </p>
+          </div>
+        </section>
+
+        <section className={styles.card}>
+          <h2 className={styles.sectionTitle}>Totales</h2>
+          <div className={styles.totalRows}>
+            <div className={styles.totalRow}>
+              <span>Subtotal</span>
+              <strong>{formatCOP(order.totals.subtotal)}</strong>
+            </div>
+            <div className={styles.totalRow}>
+              <span>IVA</span>
+              <strong>{formatCOP(order.totals.tax)}</strong>
+            </div>
+            <div className={styles.totalRow}>
+              <span>Envio</span>
+              <strong>{formatCOP(order.totals.shipping)}</strong>
+            </div>
+            <div className={`${styles.totalRow} ${styles.totalRowStrong}`}>
+              <span>Total</span>
+              <strong>{formatCOP(order.totals.total)}</strong>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section className={styles.card}>
+        <h2 className={styles.sectionTitle}>Productos</h2>
+        <div className={styles.itemList}>
+          {order.items.map((item) => (
+            <article key={`${order.id}-${item.id}`} className={styles.item}>
+              <img className={styles.itemImage} src={item.image} alt={item.name} />
+              <div className={styles.itemContent}>
+                <h3 className={styles.itemName}>{item.name}</h3>
+                <p className={styles.itemMeta}>Categoria: {item.category}</p>
+                <p className={styles.itemMeta}>Cantidad: {item.quantity}</p>
+              </div>
+              <strong className={styles.itemPrice}>{formatCOP(item.price * item.quantity)}</strong>
+            </article>
+          ))}
+        </div>
+      </section>
     </section>
   );
 }
