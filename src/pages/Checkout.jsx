@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import styles from '../styles/Checkout.module.css';
 import {
@@ -10,7 +11,8 @@ import { formatCurrency } from '../utils/priceFormat';
 
 const EMAIL_REGEX = /^[^@]+@[^@]+\.[^@]+$/;
 
-function Checkout({ cartItems, user, onBack, onCompleteCheckout }) {
+function Checkout({ cartItems, user, onCompleteCheckout }) {
+  const navigate = useNavigate();
   const [values, setValues] = useState({
     fullName: user?.name ?? '',
     email: '',
@@ -70,7 +72,7 @@ function Checkout({ cartItems, user, onBack, onCompleteCheckout }) {
       return;
     }
 
-    onCompleteCheckout({
+    const order = onCompleteCheckout({
       customer: {
         fullName: values.fullName.trim(),
         email: values.email.trim(),
@@ -82,6 +84,10 @@ function Checkout({ cartItems, user, onBack, onCompleteCheckout }) {
       shippingMethodId: values.shippingMethod,
       paymentMethodId: values.paymentMethod,
     });
+
+    if (order) {
+      navigate('/order-confirmation');
+    }
   };
 
   if (cartItems.length === 0) {
@@ -92,7 +98,7 @@ function Checkout({ cartItems, user, onBack, onCompleteCheckout }) {
           <p className={styles.emptyText}>
             No hay productos en el carrito. Regresa para agregar artículos antes de continuar.
           </p>
-          <button type="button" className={styles.secondaryButton} onClick={onBack}>
+          <button type="button" className={styles.secondaryButton} onClick={() => navigate('/cart')}>
             Volver al carrito
           </button>
         </div>
@@ -105,7 +111,7 @@ function Checkout({ cartItems, user, onBack, onCompleteCheckout }) {
       <div className={styles.wrapper}>
         {/* Header */}
         <div className={styles.header}>
-          <button type="button" className={styles.backButton} onClick={onBack}>
+          <button type="button" className={styles.backButton} onClick={() => navigate('/cart')}>
             ← Volver
           </button>
           <h1 className={styles.title}>Checkout</h1>
@@ -276,7 +282,7 @@ function Checkout({ cartItems, user, onBack, onCompleteCheckout }) {
               <button type="submit" className={styles.primaryButton}>
                 Confirmar Pedido
               </button>
-              <button type="button" className={styles.secondaryButton} onClick={onBack}>
+              <button type="button" className={styles.secondaryButton} onClick={() => navigate('/cart')}>
                 Volver al carrito
               </button>
             </div>

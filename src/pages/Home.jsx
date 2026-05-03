@@ -5,12 +5,31 @@ import homeStyles from '../styles/Home.module.css';
 import { loadProducts } from '../utils/productsStorage';
 
 function Home() {
-  const [productsState] = useState(loadProducts);
+  const [productsState] = useState(() => loadProducts());
   const navigate = useNavigate();
 
   const categoryTiles = useMemo(() => {
     const bestByCategory = new Map();
-    /* lógica existente */
+
+    productsState.forEach((product) => {
+      const currentBest = bestByCategory.get(product.category);
+
+      if (!currentBest) {
+        bestByCategory.set(product.category, product);
+        return;
+      }
+
+      const currentRating = Number(currentBest.rating) || 0;
+      const nextRating = Number(product.rating) || 0;
+
+      if (nextRating > currentRating) {
+        bestByCategory.set(product.category, product);
+      }
+    });
+
+    return Array.from(bestByCategory.entries())
+      .map(([category, product]) => ({ category, product }))
+      .sort((left, right) => left.category.localeCompare(right.category, 'es'));
   }, [productsState]);
 
   return (
@@ -30,9 +49,9 @@ function Home() {
             aria-label={`Ver productos de ${category}`}
           >
             <img className={homeStyles.categoryImage} src={product.image} alt={product.name} />
-            <span className={homeStyles.categoryLabel} aria-hidden="true">
-              <span className={homeStyles.categoryLabelText}>{category}</span>
-            </span>
+            <div className={homeStyles.categoryInfo} aria-hidden="true">
+              <span className={homeStyles.categoryName}>{category}</span>
+            </div>
           </button>
         ))}
       </div>

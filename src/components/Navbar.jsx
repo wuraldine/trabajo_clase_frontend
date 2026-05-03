@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 
-import logo from '../assets/img-logos/logo-Cesde-2023.svg';
+import logo from '../assets/logo-cesde.jpg';
 import styles from '../styles/Navbar.module.css';
 
 function Navbar({ user, onSignIn, onSignOut, cartItemCount = 0 }) {

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import styles from '../styles/Cart.module.css';
 import { calculateCartSubtotal } from '../utils/calculateOrderTotals';
@@ -10,9 +11,8 @@ function Cart({
   onUpdateQuantity,
   onRemoveItem,
   onClearCart,
-  onContinueShopping,
-  onProceedToCheckout,
 }) {
+  const navigate = useNavigate();
   const [showTerms, setShowTerms] = useState(false);
   const cart = cartItems.length > 0 || !items ? cartItems : items;
 
@@ -28,7 +28,12 @@ function Cart({
   const total = subtotal + shipping;
 
   const updateQuantity = (id, delta) => {
-    onUpdateQuantity?.(id, delta);
+    const currentItem = cart.find((item) => item.id === id);
+    if (!currentItem) {
+      return;
+    }
+
+    onUpdateQuantity?.(id, currentItem.quantity + delta);
   };
 
   const removeItem = (id) => {
@@ -40,11 +45,11 @@ function Cart({
   };
 
   const continueShopping = () => {
-    onContinueShopping?.();
+    navigate('/');
   };
 
   const proceedToCheckout = () => {
-    onProceedToCheckout?.();
+    navigate('/checkout');
   };
 
   return (
