@@ -7,6 +7,7 @@ import styles from '../styles/AuthPage.module.css';
 function Login() {
   const [values, setValues] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -20,18 +21,38 @@ function Login() {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    const result = login({
-      email: values.email.trim(),
-      password: values.password,
-    });
+    setError('');
 
-    if (!result.ok) {
-      setError(result.error);
+    const email = values.email.trim();
+    const password = values.password;
+
+    if (!email) {
+      setError('Ingresa un correo electrónico.');
       return;
     }
 
-    const nextPath = location.state?.from || '/user/profile';
-    navigate(nextPath, { replace: true });
+    if (!password || password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    (async () => {
+      try {
+        setLoading(true);
+        const result = await login({ email, password });
+        if (!result.ok) {
+          setError(result.error || 'Credenciales inválidas.');
+          return;
+        }
+
+        const nextPath = location.state?.from || '/user/profile';
+        navigate(nextPath, { replace: true });
+      } catch (e) {
+        setError(e?.message || 'Error al iniciar sesión.');
+      } finally {
+        setLoading(false);
+      }
+    })();
   };
 
   return (
@@ -70,8 +91,8 @@ function Login() {
 
           {error ? <p className={styles.error}>{error}</p> : null}
 
-          <button type="submit" className={styles.primaryButton}>
-            Ingresar
+          <button type="submit" className={styles.primaryButton} disabled={loading}>
+            {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
 
