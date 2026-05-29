@@ -101,10 +101,15 @@ export function AuthProviderServer({ children }) {
 
   const register = async (data) => {
     try {
+      const name = String(data?.name ?? '').trim();
+      const [firstName = '', ...rest] = name.split(/\s+/).filter(Boolean);
+      const lastName = rest.join(' ') || 'Usuario';
       const payload = {
         ...data,
         fullName: data?.name,
         username: data?.name,
+        firstName,
+        lastName,
       };
       const res = await authService.register(payload);
       const body = res?.data ?? res;
