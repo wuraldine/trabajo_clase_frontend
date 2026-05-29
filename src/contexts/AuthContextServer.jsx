@@ -34,9 +34,10 @@ export function AuthProviderServer({ children }) {
   const login = async ({ email, password }) => {
     try {
       const res = await authService.login({ email, password });
-      // server may return { token, user } or { accessToken, user } or user object
-      const token = res?.token ?? res?.accessToken ?? res?.access_token ?? null;
-      const user = res?.user ?? (res && (res.id || res.email) ? res : null);
+      // support ApiClient response shape {status, data, headers}
+      const body = res?.data ?? res;
+      const token = body?.token ?? body?.accessToken ?? body?.access_token ?? res?.headers?.authorization ?? res?.headers?.Authorization ?? null;
+      const user = body?.user ?? (body && (body.id || body.email) ? body : null);
 
       if (token) saveAuthToken(token);
       if (user) {
@@ -54,8 +55,9 @@ export function AuthProviderServer({ children }) {
   const register = async (data) => {
     try {
       const res = await authService.register(data);
-      const token = res?.token ?? res?.accessToken ?? null;
-      const user = res?.user ?? (res && (res.id || res.email) ? res : null);
+      const body = res?.data ?? res;
+      const token = body?.token ?? body?.accessToken ?? body?.access_token ?? res?.headers?.authorization ?? null;
+      const user = body?.user ?? (body && (body.id || body.email) ? body : null);
       if (token) saveAuthToken(token);
       if (user) {
         saveSessionUser(user);

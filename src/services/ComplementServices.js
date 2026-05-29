@@ -6,19 +6,33 @@ class ApiClient {
   async request(path, options = {}) {
     const url = path.startsWith('http') ? path : `${this.baseUrl}${path}`;
     const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' , ...(options.headers||{})},
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
       ...options,
     });
+
+    const text = await res.text();
+    let parsed = text;
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        parsed = text;
+      }
+    }
+
+    const headers = {};
+    for (const [k, v] of res.headers.entries()) headers[k] = v;
+
     if (!res.ok) {
-      const text = await res.text();
       const err = new Error(`HTTP ${res.status}: ${text}`);
       err.status = res.status;
-      err.body = text;
+      err.body = parsed;
+      err.headers = headers;
       throw err;
     }
-    const ct = res.headers.get('content-type') || '';
-    if (ct.includes('application/json')) return res.json();
-    return res.text();
+
+    return { status: res.status, data: parsed, headers };
   }
 }
 
