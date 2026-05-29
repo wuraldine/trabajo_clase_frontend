@@ -153,4 +153,22 @@ export function clearSessionUser() {
   window.localStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
+const AUTH_TOKEN_KEY = 'authToken';
+
+export function saveAuthToken(token) {
+  if (typeof window === 'undefined') return;
+  if (!token) return window.localStorage.removeItem(AUTH_TOKEN_KEY);
+  window.localStorage.setItem(AUTH_TOKEN_KEY, String(token));
+}
+
+export function loadAuthToken() {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(AUTH_TOKEN_KEY) || null;
+}
+
+export function clearAuthToken() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
 export { SESSION_STORAGE_KEY, USERS_STORAGE_KEY };
