@@ -23,6 +23,8 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
     paymentMethod: PAYMENT_METHODS[0].id,
   });
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,6 +56,7 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
       ...currentErrors,
       [name]: '',
     }));
+    setSubmitError('');
   };
 
   const validateValues = () => {
@@ -74,7 +77,7 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
     return nextErrors;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const nextErrors = validateValues();
@@ -84,23 +87,31 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
       return;
     }
 
-    const order = onCompleteCheckout({
-      customer: {
-        fullName: values.fullName.trim(),
-        email: values.email.trim(),
-        phone: values.phone.trim(),
-        address: values.address.trim(),
-        city: values.city.trim(),
-        postalCode: values.postalCode.trim(),
-      },
-      shippingMethodId: values.shippingMethod,
-      paymentMethodId: values.paymentMethod,
-    });
+    try {
+      setSubmitting(true);
+      const order = await onCompleteCheckout({
+        customer: {
+          fullName: values.fullName.trim(),
+          email: values.email.trim(),
+          phone: values.phone.trim(),
+          address: values.address.trim(),
+          city: values.city.trim(),
+          postalCode: values.postalCode.trim(),
+        },
+        shippingMethodId: values.shippingMethod,
+        paymentMethodId: values.paymentMethod,
+      });
 
-    if (order) {
-      navigate('/order-confirmation');
-    } else {
-      navigate('/cart');
+      if (order) {
+        navigate('/order-confirmation');
+      } else {
+        setSubmitError('No se pudo confirmar la orden. Vuelve a intentarlo.');
+        navigate('/cart');
+      }
+    } catch (e) {
+      setSubmitError(e?.message || 'No se pudo confirmar la orden.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -273,15 +284,17 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
           </section>
 
           <div className={styles.actions}>
+            {submitError ? <span className={styles.error}>{submitError}</span> : null}
             <button
               type="button"
               className={styles.secondaryButton}
               onClick={() => navigate('/cart')}
+              disabled={submitting}
             >
               Volver
             </button>
-            <button type="submit" className={styles.primaryButton}>
-              Confirmar compra
+            <button type="submit" className={styles.primaryButton} disabled={submitting}>
+              {submitting ? 'Confirmando...' : 'Confirmar compra'}
             </button>
           </div>
         </form>

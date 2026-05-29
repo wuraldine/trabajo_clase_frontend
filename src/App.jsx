@@ -16,6 +16,7 @@ import ProductList from './pages/ProductList';
 import Register from './pages/Register';
 import UserOrders from './pages/UserOrders';
 import UserProfile from './pages/UserProfile';
+import { orderService } from './services';
 import {
   calculateOrderTotals,
   getPaymentMethodById,
@@ -103,7 +104,7 @@ function App() {
     setCartItems([]);
   };
 
-  const handleCompleteCheckout = ({ customer, shippingMethodId, paymentMethodId }) => {
+  const handleCompleteCheckout = async ({ customer, shippingMethodId, paymentMethodId }) => {
     if (cartItems.length === 0) {
       return null;
     }
@@ -120,10 +121,54 @@ function App() {
       totals,
     };
 
-    saveOrder(order);
-    setLatestOrder(order);
-    setCartItems([]);
-    return order;
+    const backendPayload = {
+      customer,
+      items: cartItems.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      shippingMethodId,
+      paymentMethodId,
+    };
+
+    try {
+      const response = await orderService.placeOrder(backendPayload);
+      const body = response?.data ?? response;
+      const remoteOrder = body?.order ?? body;
+
+      const persistedOrder = {
+        ...order,
+        id: String(remoteOrder?.id ?? remoteOrder?.orderId ?? order.id),
+        createdAt: String(remoteOrder?.createdAt ?? remoteOrder?.date ?? order.createdAt),
+        items: Array.isArray(remoteOrder?.items) && remoteOrder.items.length > 0
+          ? remoteOrder.items.map((item) => ({
+              id: Number(item?.id ?? item?.productId ?? item?.product?.id),
+              name: item?.name ?? item?.productName ?? item?.product?.name ?? 'Producto',
+              category: item?.category ?? item?.product?.category ?? 'Sin categoría',
+              price: Number(item?.price ?? item?.unitPrice ?? 0),
+              stock: Number(item?.stock ?? 0),
+              image: item?.image ?? item?.product?.image ?? '',
+              quantity: Number(item?.quantity ?? 1),
+            }))
+          : order.items,
+        customer: {
+          ...order.customer,
+          ...(remoteOrder?.customer ?? {}),
+        },
+      };
+
+      saveOrder(persistedOrder);
+      setLatestOrder(persistedOrder);
+      setCartItems([]);
+      return persistedOrder;
+    } catch (error) {
+      // Preserve existing behavior locally if backend is unavailable.
+      saveOrder(order);
+      setLatestOrder(order);
+      setCartItems([]);
+      return order;
+    }
   };
 
   const handleBackHomeAfterOrder = () => {
