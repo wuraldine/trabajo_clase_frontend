@@ -8,6 +8,10 @@ function Register() {
   const [values, setValues] = useState({
     name: '',
     email: '',
+    phone: '',
+    address: '',
+    city: '',
+    postalCode: '',
     password: '',
     confirmPassword: '',
   });
@@ -48,6 +52,10 @@ function Register() {
       const result = await register({
         name: values.name.trim(),
         email: values.email.trim(),
+        phone: values.phone.trim(),
+        address: values.address.trim(),
+        city: values.city.trim(),
+        postalCode: values.postalCode.trim(),
         password: values.password,
       });
 
@@ -80,7 +88,7 @@ function Register() {
               name="name"
               value={values.name}
               onChange={handleChange}
-              placeholder="Ejemplo: Ana Gómez"
+              placeholder="Ejemplo: Juan Pérez"
             />
           </label>
 
@@ -93,6 +101,51 @@ function Register() {
               onChange={handleChange}
               placeholder="correo@dominio.com"
               type="email"
+            />
+          </label>
+
+          <label className={styles.field}>
+            <span className={styles.label}>Teléfono</span>
+            <input
+              className={styles.input}
+              name="phone"
+              value={values.phone}
+              onChange={handleChange}
+              placeholder="Ejemplo: 3001234567"
+              type="tel"
+            />
+          </label>
+
+          <label className={styles.field}>
+            <span className={styles.label}>Dirección</span>
+            <input
+              className={styles.input}
+              name="address"
+              value={values.address}
+              onChange={handleChange}
+              placeholder="Calle 123 #45-67"
+            />
+          </label>
+
+          <label className={styles.field}>
+            <span className={styles.label}>Ciudad</span>
+            <input
+              className={styles.input}
+              name="city"
+              value={values.city}
+              onChange={handleChange}
+              placeholder="Medellín"
+            />
+          </label>
+
+          <label className={styles.field}>
+            <span className={styles.label}>Código postal</span>
+            <input
+              className={styles.input}
+              name="postalCode"
+              value={values.postalCode}
+              onChange={handleChange}
+              placeholder="050021"
             />
           </label>
 

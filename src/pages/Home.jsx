@@ -1,29 +1,63 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import homeStyles from '../styles/Home.module.css';
+import { productService } from '../services';
+import { toSpanishCategoryLabel } from '../utils/categoryLabels';
 import { loadProducts } from '../utils/productsStorage';
 
 function Home() {
-  const [productsState] = useState(() => loadProducts());
+  const [productsState, setProductsState] = useState(() => loadProducts());
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let mounted = true;
+
+    productService
+      .list()
+      .then((res) => {
+        if (!mounted) return;
+        const source = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.data)
+            ? res.data
+            : Array.isArray(res?.data?.products)
+              ? res.data.products
+              : [];
+
+        if (source.length > 0) {
+          setProductsState(source);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const categoryTiles = useMemo(() => {
     const bestByCategory = new Map();
 
     productsState.forEach((product) => {
-      const currentBest = bestByCategory.get(product.category);
+      const category =
+        product?.category ?? product?.categoryName ?? product?.category?.name ?? 'Sin categoría';
+
+      const image = product?.image ?? product?.imageUrl ?? product?.thumbnailUrl ?? '';
+      const normalizedProduct = { ...product, category, image };
+
+      const currentBest = bestByCategory.get(category);
 
       if (!currentBest) {
-        bestByCategory.set(product.category, product);
+        bestByCategory.set(category, normalizedProduct);
         return;
       }
 
       const currentRating = Number(currentBest.rating) || 0;
-      const nextRating = Number(product.rating) || 0;
+      const nextRating = Number(normalizedProduct.rating) || 0;
 
       if (nextRating > currentRating) {
-        bestByCategory.set(product.category, product);
+        bestByCategory.set(category, normalizedProduct);
       }
     });
 
@@ -50,11 +84,15 @@ function Home() {
           >
             <img className={homeStyles.categoryImage} src={product.image} alt={product.name} />
             <div className={homeStyles.categoryInfo} aria-hidden="true">
-              <span className={homeStyles.categoryName}>{category}</span>
+              <span className={homeStyles.categoryName}>{toSpanishCategoryLabel(category)}</span>
             </div>
           </button>
         ))}
       </div>
+
+      {categoryTiles.length === 0 ? (
+        <p className={homeStyles.subtitle}>No hay categorías disponibles por el momento.</p>
+      ) : null}
     </div>
   );
 }

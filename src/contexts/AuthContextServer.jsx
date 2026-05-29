@@ -26,6 +26,10 @@ const extractUser = (body) => {
       name: body.user.name ?? body.user.fullName ?? body.user.username ?? body.user.email,
       role: body.user.role,
       isAdmin: body.user.isAdmin ?? (String(body.user.role ?? '').toLowerCase() === 'admin'),
+      phone: body.user.phone ?? body.user.phoneNumber ?? '',
+      address: body.user.address ?? body.user.addressLine1 ?? '',
+      city: body.user.city ?? '',
+      postalCode: body.user.postalCode ?? body.user.zipCode ?? '',
     };
   }
 
@@ -36,6 +40,10 @@ const extractUser = (body) => {
       name: body.name ?? body.fullName ?? body.username ?? body.email,
       role: body.role,
       isAdmin: body.isAdmin ?? (String(body.role ?? '').toLowerCase() === 'admin'),
+      phone: body.phone ?? body.phoneNumber ?? '',
+      address: body.address ?? body.addressLine1 ?? '',
+      city: body.city ?? '',
+      postalCode: body.postalCode ?? body.zipCode ?? '',
     };
   }
 
@@ -110,6 +118,13 @@ export function AuthProviderServer({ children }) {
         username: data?.name,
         firstName,
         lastName,
+        phone: data?.phone,
+        phoneNumber: data?.phone,
+        address: data?.address,
+        addressLine1: data?.address,
+        city: data?.city,
+        postalCode: data?.postalCode,
+        zipCode: data?.postalCode,
       };
       const res = await authService.register(payload);
       const body = res?.data ?? res;
@@ -128,9 +143,16 @@ export function AuthProviderServer({ children }) {
       }
 
       if (user) {
-        saveSessionUser(user);
-        setCurrentUser(user);
-        return { ok: true, user };
+        const enrichedUser = {
+          ...user,
+          phone: user.phone || data?.phone || '',
+          address: user.address || data?.address || '',
+          city: user.city || data?.city || '',
+          postalCode: user.postalCode || data?.postalCode || '',
+        };
+        saveSessionUser(enrichedUser);
+        setCurrentUser(enrichedUser);
+        return { ok: true, user: enrichedUser };
       }
       return { ok: false, error: 'Respuesta inesperada del servidor.' };
     } catch (e) {
