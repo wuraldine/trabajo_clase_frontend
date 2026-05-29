@@ -3,26 +3,35 @@ import { useEffect, useState } from 'react';
 import ProductCard from '../components/ProductCard';
 import ProductForm from '../components/ProductForm';
 import styles from '../styles/ProductList.module.css';
-import { loadProducts, PRODUCTS_STORAGE_KEY } from '../utils/productsStorage';
-
-const STORAGE_KEY = PRODUCTS_STORAGE_KEY;
+import { loadProducts } from '../utils/productsStorage';
+import { productService } from '../services';
+import useAuth from '../hooks/useAuth';
 
 function ProductList() {
-  const [productsState, setProductsState] = useState(loadProducts);
+  const [productsState, setProductsState] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const { currentUser } = useAuth();
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
+    let mounted = true;
 
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(productsState));
-    } catch (error) {
-      void error;
-    }
-  }, [productsState]);
+    // try to load from backend, fallback to local seed
+    productService
+      .list()
+      .then((res) => {
+        if (!mounted) return;
+        if (Array.isArray(res)) setProductsState(res);
+        else if (res && Array.isArray(res.data)) setProductsState(res.data);
+        else setProductsState(loadProducts());
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setProductsState(loadProducts());
+      });
+
+    return () => (mounted = false);
+  }, []);
 
   const handleOpenCreate = () => {
     setEditingProduct(null);
@@ -34,27 +43,39 @@ function ProductList() {
     setIsFormOpen(false);
   };
 
-  const handleAddProduct = (product) => {
-    setProductsState((prev) => {
-      const maxId = prev.reduce((acc, item) => Math.max(acc, item.id), 0);
-      const nextId = maxId + 1;
-
-      return [
-        ...prev,
-        {
-          ...product,
-          id: nextId,
-          likes: Number(product.likes) || 0,
-          isLiked: Boolean(product.isLiked),
-        },
-      ];
-    });
+  const handleAddProduct = async (product) => {
+    try {
+      const created = await productService.create(product);
+      const newItem = Array.isArray(created) ? created[created.length - 1] : created?.data ?? created;
+      setProductsState((prev) => [...prev, newItem]);
+    } catch (e) {
+      // fallback to local
+      setProductsState((prev) => {
+        const maxId = prev.reduce((acc, item) => Math.max(acc, item.id || 0), 0);
+        const nextId = maxId + 1;
+        return [
+          ...prev,
+          {
+            ...product,
+            id: nextId,
+            likes: Number(product.likes) || 0,
+            isLiked: Boolean(product.isLiked),
+          },
+        ];
+      });
+    }
 
     handleCloseForm();
   };
 
-  const handleDeleteProduct = (id) => {
-    setProductsState((prev) => prev.filter((product) => product.id !== id));
+  const handleDeleteProduct = async (id) => {
+    try {
+      await productService.remove(id);
+      setProductsState((prev) => prev.filter((product) => product.id !== id));
+    } catch (e) {
+      // fallback local
+      setProductsState((prev) => prev.filter((product) => product.id !== id));
+    }
 
     if (editingProduct?.id === id) {
       handleCloseForm();
@@ -66,18 +87,17 @@ function ProductList() {
     setIsFormOpen(true);
   };
 
-  const handleEditSubmit = (updatedProduct) => {
-    setProductsState((prev) =>
-      prev.map((product) =>
-        product.id === updatedProduct.id
-          ? {
-              ...updatedProduct,
-              likes: Number(updatedProduct.likes ?? product.likes) || 0,
-              isLiked: Boolean(updatedProduct.isLiked ?? product.isLiked),
-            }
-          : product
-      )
-    );
+  const handleEditSubmit = async (updatedProduct) => {
+    try {
+      const updated = await productService.update(updatedProduct.id, updatedProduct);
+      const updatedItem = updated?.data ?? updated;
+      setProductsState((prev) => prev.map((p) => (p.id === updatedItem.id ? updatedItem : p)));
+    } catch (e) {
+      setProductsState((prev) =>
+        prev.map((product) => (product.id === updatedProduct.id ? { ...product, ...updatedProduct } : product))
+      );
+    }
+
     handleCloseForm();
   };
 
@@ -100,6 +120,8 @@ function ProductList() {
     });
   };
 
+  const isAdmin = Boolean(currentUser?.isAdmin || (currentUser?.role && String(currentUser.role).toLowerCase() === 'admin'));
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -119,15 +141,18 @@ function ProductList() {
       ) : (
         <>
           <div className={styles.toolbar}>
-            <button className={styles.btnAdd} type="button" onClick={handleOpenCreate}>
-              Agregar producto
-            </button>
+            {isAdmin ? (
+              <button className={styles.btnAdd} type="button" onClick={handleOpenCreate}>
+                Agregar producto
+              </button>
+            ) : null}
           </div>
 
           <div className={styles.grid}>
             {productsState.map((product) => (
               <ProductCard
                 key={product.id}
+                id={product.id}
                 name={product.name}
                 category={product.category}
                 price={product.price}
@@ -138,8 +163,8 @@ function ProductList() {
                 likes={product.likes}
                 isLiked={product.isLiked}
                 onToggleLike={() => handleToggleLike(product.id)}
-                onDelete={() => handleDeleteProduct(product.id)}
-                onEdit={() => handleEditStart(product)}
+                onDelete={isAdmin ? () => handleDeleteProduct(product.id) : undefined}
+                onEdit={isAdmin ? () => handleEditStart(product) : undefined}
               />
             ))}
           </div>

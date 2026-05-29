@@ -29,6 +29,9 @@ const sanitizeSessionUser = (user) => {
     address: normalizedUser.address,
     city: normalizedUser.city,
     postalCode: normalizedUser.postalCode,
+    // support role or isAdmin fields from server
+    role: (user && (user.role || user.type)) || undefined,
+    isAdmin: Boolean(user?.isAdmin || (user?.role && String(user.role).toLowerCase() === 'admin')),
   };
 };
 
