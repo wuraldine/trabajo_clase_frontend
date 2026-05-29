@@ -1,3 +1,5 @@
+import { loadAuthToken } from '../utils/authStorage';
+
 class ApiClient {
   constructor(baseUrl = '') {
     this.baseUrl = baseUrl || '';
@@ -5,8 +7,15 @@ class ApiClient {
 
   async request(path, options = {}) {
     const url = path.startsWith('http') ? path : `${this.baseUrl}${path}`;
+    // attach Authorization header automatically when token exists
+    const token = typeof window !== 'undefined' ? loadAuthToken() : null;
+    const mergedHeaders = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+    if (token && !mergedHeaders.Authorization && !mergedHeaders.authorization) {
+      mergedHeaders.Authorization = `Bearer ${token}`;
+    }
+
     const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+      headers: mergedHeaders,
       ...options,
     });
 
