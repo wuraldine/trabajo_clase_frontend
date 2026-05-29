@@ -24,23 +24,42 @@ function Register() {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (values.password !== values.confirmPassword) {
-      setError('Las contraseñas no coinciden.');
-      return;
-    }
+    const run = async () => {
+      if (!values.name.trim()) {
+        setError('Ingresa un nombre.');
+        return;
+      }
 
-    const result = register({
-      name: values.name,
-      email: values.email,
-      password: values.password,
-    });
+      if (!values.email.trim()) {
+        setError('Ingresa un correo electrónico.');
+        return;
+      }
 
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
+      if (!values.password || values.password.length < 6) {
+        setError('La contraseña debe tener al menos 6 caracteres.');
+        return;
+      }
 
-    navigate('/user/profile', { replace: true });
+      if (values.password !== values.confirmPassword) {
+        setError('Las contraseñas no coinciden.');
+        return;
+      }
+
+      const result = await register({
+        name: values.name.trim(),
+        email: values.email.trim(),
+        password: values.password,
+      });
+
+      if (!result.ok) {
+        setError(result.error || 'No se pudo registrar el usuario.');
+        return;
+      }
+
+      navigate('/user/profile', { replace: true });
+    };
+
+    run().catch((e) => setError(e?.message || 'No se pudo registrar el usuario.'));
   };
 
   return (

@@ -4,6 +4,44 @@ import { loadSessionUser, saveSessionUser, clearSessionUser, saveAuthToken, load
 
 const AuthContextServer = createContext(null);
 
+const extractToken = (body, headers) => {
+  const raw =
+    body?.sessionToken ??
+    body?.token ??
+    body?.accessToken ??
+    body?.access_token ??
+    headers?.authorization ??
+    headers?.Authorization ??
+    null;
+  return raw ? String(raw) : null;
+};
+
+const extractUser = (body) => {
+  if (!body) return null;
+
+  if (body.user && (body.user.id || body.user.userId || body.user.email)) {
+    return {
+      ...body.user,
+      id: body.user.id ?? body.user.userId,
+      name: body.user.name ?? body.user.fullName ?? body.user.username ?? body.user.email,
+      role: body.user.role,
+      isAdmin: body.user.isAdmin ?? (String(body.user.role ?? '').toLowerCase() === 'admin'),
+    };
+  }
+
+  if (body.id || body.userId || body.email) {
+    return {
+      ...body,
+      id: body.id ?? body.userId,
+      name: body.name ?? body.fullName ?? body.username ?? body.email,
+      role: body.role,
+      isAdmin: body.isAdmin ?? (String(body.role ?? '').toLowerCase() === 'admin'),
+    };
+  }
+
+  return null;
+};
+
 export function AuthProviderServer({ children }) {
   const [currentUser, setCurrentUser] = useState(loadSessionUser);
   const [loading, setLoading] = useState(false);
@@ -18,8 +56,8 @@ export function AuthProviderServer({ children }) {
       .me()
       .then((res) => {
         if (!mounted) return;
-        // support different shapes: { user } or direct user
-        const user = res?.user ?? res;
+        const body = res?.data ?? res;
+        const user = extractUser(body);
         if (user) {
           saveSessionUser(user);
           setCurrentUser(user);
@@ -34,12 +72,21 @@ export function AuthProviderServer({ children }) {
   const login = async ({ email, password }) => {
     try {
       const res = await authService.login({ email, password });
-      // support ApiClient response shape {status, data, headers}
       const body = res?.data ?? res;
-      const token = body?.token ?? body?.accessToken ?? body?.access_token ?? res?.headers?.authorization ?? res?.headers?.Authorization ?? null;
-      const user = body?.user ?? (body && (body.id || body.email) ? body : null);
+      const token = extractToken(body, res?.headers);
+      let user = extractUser(body);
 
       if (token) saveAuthToken(token);
+
+      if (!user && token) {
+        try {
+          const meRes = await authService.me();
+          user = extractUser(meRes?.data ?? meRes);
+        } catch {
+          user = null;
+        }
+      }
+
       if (user) {
         saveSessionUser(user);
         setCurrentUser(user);
@@ -54,11 +101,27 @@ export function AuthProviderServer({ children }) {
 
   const register = async (data) => {
     try {
-      const res = await authService.register(data);
+      const payload = {
+        ...data,
+        fullName: data?.name,
+        username: data?.name,
+      };
+      const res = await authService.register(payload);
       const body = res?.data ?? res;
-      const token = body?.token ?? body?.accessToken ?? body?.access_token ?? res?.headers?.authorization ?? null;
-      const user = body?.user ?? (body && (body.id || body.email) ? body : null);
+      const token = extractToken(body, res?.headers);
+      let user = extractUser(body);
+
       if (token) saveAuthToken(token);
+
+      if (!user && token) {
+        try {
+          const meRes = await authService.me();
+          user = extractUser(meRes?.data ?? meRes);
+        } catch {
+          user = null;
+        }
+      }
+
       if (user) {
         saveSessionUser(user);
         setCurrentUser(user);

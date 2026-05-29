@@ -161,7 +161,8 @@ const AUTH_TOKEN_KEY = 'authToken';
 export function saveAuthToken(token) {
   if (typeof window === 'undefined') return;
   if (!token) return window.localStorage.removeItem(AUTH_TOKEN_KEY);
-  window.localStorage.setItem(AUTH_TOKEN_KEY, String(token));
+  const normalized = String(token).replace(/^Bearer\s+/i, '').trim();
+  window.localStorage.setItem(AUTH_TOKEN_KEY, normalized);
 }
 
 export function loadAuthToken() {
