@@ -7,7 +7,7 @@ import { loadProducts } from '../utils/productsStorage';
 import { productService } from '../services';
 import useAuth from '../hooks/useAuth';
 
-function ProductList() {
+function ProductList({ onAddToCart }) {
   const [productsState, setProductsState] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -162,6 +162,7 @@ function ProductList() {
                 description={product.description}
                 likes={product.likes}
                 isLiked={product.isLiked}
+                onAddToCart={onAddToCart ? () => onAddToCart(product) : undefined}
                 onToggleLike={() => handleToggleLike(product.id)}
                 onDelete={isAdmin ? () => handleDeleteProduct(product.id) : undefined}
                 onEdit={isAdmin ? () => handleEditStart(product) : undefined}
